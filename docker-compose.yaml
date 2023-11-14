@@ -1,0 +1,23 @@
+version: '3.9'
+services:
+  mongo:
+    image: mongo
+    restart: "no"
+    container_name: goauth-mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./docker-data/mongodb:/data/db
+  nats:
+    image: nats
+    restart: "no"
+    container_name: goauth-natsjetstream
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: "-js"
+    volumes:
+      - ./docker-data/nats_data:/tmp/nats/jetstream

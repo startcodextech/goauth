@@ -1,0 +1,15 @@
+openapiOptions:
+  file:
+    - file: "services/users/api.proto"
+      option:
+        info:
+          title: User
+          version: "0.0.1"
+        basePath: /
+  method:
+    - method: users.UsersService.CreateUser
+      option:
+        operationId: createUser
+        tags:
+          - User
+        summary: Start a new user

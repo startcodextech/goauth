@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package users;
+
+option go_package = "github.com/startcodextech/goauth/services/users";
+
+service UsersService{
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {};
+}
+
+message CreateUserRequest {
+  string email = 1;
+  string phone = 2;
+  string password = 3;
+  string name = 4;
+  string last_name = 5;
+  bool enable = 6;
+}
+
+message CreateUserResponse {
+  string id = 1;
+}
