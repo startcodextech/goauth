@@ -1,4 +1,4 @@
-package users
+package domain
 
 const (
 	UserCreatedEvent = "account.UserCreated"

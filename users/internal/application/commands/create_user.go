@@ -3,7 +3,7 @@ package commands
 import (
 	"context"
 	"github.com/pkg/errors"
-	"github.com/startcodextech/goauth/users/internal/domain/users"
+	"github.com/startcodextech/goauth/users/internal/domain"
 	"github.com/startcodextech/goevents/ddd"
 )
 
@@ -18,12 +18,12 @@ type (
 	}
 
 	CreateUserHandler struct {
-		users     users.UserRepository
+		users     domain.UserRepository
 		publisher ddd.EventPublisher[ddd.Event]
 	}
 )
 
-func NewCreateUserHandler(users users.UserRepository, publisher ddd.EventPublisher[ddd.Event]) CreateUserHandler {
+func NewCreateUserHandler(users domain.UserRepository, publisher ddd.EventPublisher[ddd.Event]) CreateUserHandler {
 	return CreateUserHandler{
 		users:     users,
 		publisher: publisher,

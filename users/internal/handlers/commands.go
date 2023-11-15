@@ -1,9 +1,16 @@
 package handlers
 
 import (
+	"context"
 	"github.com/startcodextech/goauth/users/internal/application"
+	"github.com/startcodextech/goauth/users/pb"
 	"github.com/startcodextech/goevents/asyncmessages"
+	"github.com/startcodextech/goevents/ddd"
+	"github.com/startcodextech/goevents/errorsotel"
 	"github.com/startcodextech/goevents/registry"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+	"time"
 )
 
 type (
@@ -15,9 +22,31 @@ type (
 func NewCommandHandlers(reg registry.Registry, app application.App, replyPublisher asyncmessages.ReplyPublisher, mws ...asyncmessages.MessageHandlerMiddleware) asyncmessages.MessageHandler {
 	return asyncmessages.NewCommandHandler(reg, replyPublisher, commandHandlers{
 		app: app,
-	}, mws)
+	}, mws...)
 }
 
 func RegisterCommandHandlers(subscriber asyncmessages.MessageSubscriber, handlers asyncmessages.MessageHandler) error {
-	_, err := subscriber.Subscribe(CommandChannel)
+	_, err := subscriber.Subscribe(pb.CommandChannel, handlers, asyncmessages.MessageFilter{}, asyncmessages.GroupName("users-commands"))
+	return err
+}
+
+func (h commandHandlers) HandleCommand(ctx context.Context, cmd ddd.Command) (reply ddd.Reply, err error) {
+	span := trace.SpanFromContext(ctx)
+	defer func(started time.Time) {
+		if err != nil {
+			span.AddEvent(
+				"Encountered an error handling command",
+				trace.WithAttributes(errorsotel.ErrAttrs(err)...),
+			)
+		}
+		span.AddEvent("Handled command", trace.WithAttributes(
+			attribute.Int64("took-ms", time.Since(started).Milliseconds()),
+		))
+	}(time.Now())
+
+	span.AddEvent("Handling command", trace.WithAttributes(
+		attribute.String("Command", cmd.CommandName()),
+	))
+
+	return nil, nil
 }

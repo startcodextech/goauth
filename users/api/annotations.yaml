@@ -2,6 +2,6 @@ type: google.api.Service
 config_version: 3
 http:
   rules:
-    - selector: users.UsersService.CreateUser
+    - selector: pb.UsersService.CreateUser
       post: /api/users
       body: "*"

@@ -1,4 +1,4 @@
-package users
+package domain
 
 type (
 	UserV1 struct {

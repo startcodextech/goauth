@@ -1,13 +1,13 @@
 openapiOptions:
   file:
-    - file: "services/users/api.proto"
+    - file: "pb/api.proto"
       option:
         info:
           title: User
           version: "0.0.1"
         basePath: /
   method:
-    - method: users.UsersService.CreateUser
+    - method: pb.UsersService.CreateUser
       option:
         operationId: createUser
         tags:
