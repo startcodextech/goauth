@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/startcodextech/goauth/users/internal/application"
 	"github.com/startcodextech/goauth/users/pb"
-	"github.com/startcodextech/goevents/asyncmessages"
+	"github.com/startcodextech/goevents/async"
 	"github.com/startcodextech/goevents/ddd"
 	"github.com/startcodextech/goevents/errorsotel"
 	"github.com/startcodextech/goevents/registry"
@@ -19,14 +19,14 @@ type (
 	}
 )
 
-func NewCommandHandlers(reg registry.Registry, app application.App, replyPublisher asyncmessages.ReplyPublisher, mws ...asyncmessages.MessageHandlerMiddleware) asyncmessages.MessageHandler {
-	return asyncmessages.NewCommandHandler(reg, replyPublisher, commandHandlers{
+func NewCommandHandlers(reg registry.Registry, app application.App, replyPublisher async.ReplyPublisher, mws ...async.MessageHandlerMiddleware) async.MessageHandler {
+	return async.NewCommandHandler(reg, replyPublisher, commandHandlers{
 		app: app,
 	}, mws...)
 }
 
-func RegisterCommandHandlers(subscriber asyncmessages.MessageSubscriber, handlers asyncmessages.MessageHandler) error {
-	_, err := subscriber.Subscribe(pb.CommandChannel, handlers, asyncmessages.MessageFilter{}, asyncmessages.GroupName("users-commands"))
+func RegisterCommandHandlers(subscriber async.MessageSubscriber, handlers async.MessageHandler) error {
+	_, err := subscriber.Subscribe(pb.CommandChannel, handlers, async.MessageFilter{}, async.GroupName("users-commands"))
 	return err
 }
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/startcodextech/goerrors"
 	"github.com/startcodextech/goevents/ddd"
-	"github.com/startcodextech/goevents/eventsourcing"
+	"github.com/startcodextech/goevents/esourcing"
 	"github.com/startcodextech/goutils/validator"
 	"regexp"
 	"strings"
@@ -30,7 +30,7 @@ var (
 
 type (
 	User struct {
-		eventsourcing.Aggregate
+		esourcing.Aggregate
 		Email        string
 		Phone        string
 		PasswordHash string
@@ -43,13 +43,13 @@ type (
 )
 
 var _ interface {
-	eventsourcing.EventApplier
-	eventsourcing.Snapshotter
+	esourcing.EventApplier
+	esourcing.Snapshotter
 } = (*User)(nil)
 
 func NewUser(id string) *User {
 	return &User{
-		Aggregate: eventsourcing.NewAggregate(id, UserAggregate),
+		Aggregate: esourcing.NewAggregate(id, UserAggregate),
 	}
 }
 
@@ -99,7 +99,7 @@ func (u *User) ApplyEvent(event ddd.Event) error {
 	return nil
 }
 
-func (u *User) ApplySnapshot(snapshot eventsourcing.Snapshot) error {
+func (u *User) ApplySnapshot(snapshot esourcing.Snapshot) error {
 	switch ss := snapshot.(type) {
 	case *UserV1:
 		u.Email = ss.Email
@@ -116,7 +116,7 @@ func (u *User) ApplySnapshot(snapshot eventsourcing.Snapshot) error {
 	return nil
 }
 
-func (u *User) ToSnapshot() eventsourcing.Snapshot {
+func (u *User) ToSnapshot() esourcing.Snapshot {
 	return &UserV1{
 		Email:        u.Email,
 		Phone:        u.Phone,
