@@ -6,6 +6,5 @@ type (
 		Lastname string `json:"lastname"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
-		PhotoURL string `json:"photo_url"`
 	}
 )

@@ -29,7 +29,7 @@ const (
 	UserAggregate = "account.user"
 )
 
-func New(id uuid.UUID) *User {
+func UserNew(id uuid.UUID) *User {
 	var user *User
 	user = &User{
 		Base: aggregate.New(UserAggregate, id),
@@ -44,8 +44,10 @@ func New(id uuid.UUID) *User {
 		),
 	}
 
+	// Register events
 	event.ApplyWith(user, user.onCreated, EventUserCreated)
 
+	// Register command
 	command.ApplyWith(user, user.Create, UserCreatedCmd)
 
 	return user
@@ -53,21 +55,27 @@ func New(id uuid.UUID) *User {
 
 func (u *User) Create(payload UserCreateDto) error {
 
-	if !validator.Email(payload.Email).IsValid() {
-		return errors.New("the provided email does not meet the validation criteria")
+	if !validator.IsNameOrLastname(payload.Name) {
+		return errors.New("the name provided is not valid.")
 	}
 
-	pass, err := password.HashPassword(payload.Password, 14)
-	if err != nil {
-		return err
+	if !validator.IsNameOrLastname(payload.Lastname) {
+		return errors.New("the last name provided is not valid.")
+	}
+
+	if !validator.IsEmail(payload.Email) {
+		return errors.New("the provided email does not meet the validation criteria.")
+	}
+
+	if !validator.IsValidPassword(payload.Password) {
+		return errors.New("the provided password does not meet the validation criteria.")
 	}
 
 	user := UserCreated{
 		Name:         payload.Name,
 		Lastname:     payload.Lastname,
 		Email:        payload.Email,
-		PasswordHash: pass.String(),
-		PhotoURL:     payload.PhotoURL,
+		PasswordHash: password.HashPasswordString(payload.Password, 14),
 	}
 
 	aggregate.Next(u, EventUserCreated, user)
@@ -78,5 +86,5 @@ func (u *User) onCreated(event event.Of[UserCreated]) {
 	u.name = event.Data().Name
 	u.lastname = event.Data().Lastname
 	u.email = event.Data().Email
-	u.photoUrl = event.Data().PhotoURL
+	u.passwordHash = event.Data().PasswordHash
 }

@@ -17,10 +17,9 @@ type (
 		Lastname     string
 		PasswordHash string
 		Email        string
-		PhotoURL     string
 	}
 )
 
-func UserRegisterEvents(r codec.Registerer) {
+func userRegisterEvents(r codec.Registerer) {
 	codec.Register[UserCreated](r, EventUserCreated)
 }
