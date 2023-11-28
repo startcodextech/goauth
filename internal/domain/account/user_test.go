@@ -1,49 +1,107 @@
 package account
 
-import (
-	"github.com/google/uuid"
-	"github.com/modernice/goes/test"
-	"testing"
-)
+import "testing"
 
-func TestNew(t *testing.T) {
-	test.NewAggregate(t, UserNew, UserAggregate)
+func TestCreateUser(t *testing.T) {
+
+	dto := UserCreateDto{
+		ID:           "1",
+		Name:         "John",
+		Lastname:     "Doe",
+		Email:        "user@test.app",
+		PasswordHash: "14$%&/()=?¡",
+	}
+
+	user := NewUser()
+
+	if err := user.Create(dto); err != nil {
+		t.Error(err)
+	}
 }
 
-func TestUser_Create(t *testing.T) {
-	user := UserNew(uuid.New())
-
-	userNew := UserCreateDto{
-		Name:     "Julio",
-		Lastname: "Caicedo",
-		Email:    "email@test.mail",
-		Password: "@Master.123",
+func TestCreateUser_FailInvalidEmail(t *testing.T) {
+	dto := UserCreateDto{
+		ID:           "1",
+		Name:         "John",
+		Lastname:     "Doe",
+		Email:        "user@testapp",
+		PasswordHash: "14$%&/()=?¡",
 	}
 
-	if err := user.Create(userNew); err != nil {
-		t.Fatalf("Create(%q) failed with %q", userNew, err)
+	user := NewUser()
+
+	err := user.Create(dto)
+	if err == nil {
+		t.Errorf("Expected an error for invalid email, got none")
+	} else {
+		expectedErrorMsg := "email is not valid"
+		if err.Error() != expectedErrorMsg {
+			t.Errorf("Expected error '%s', got '%s'", expectedErrorMsg, err.Error())
+		}
+	}
+}
+
+func TestCreateUser_FailInvalidLastName(t *testing.T) {
+	dto := UserCreateDto{
+		ID:           "1",
+		Name:         "John",
+		Lastname:     "D",
+		Email:        "user@test.app",
+		PasswordHash: "14$%&/()=?¡",
 	}
 
-	changes := user.AggregateChanges()
-	if len(changes) != 1 {
-		t.Fatalf("expected 1 change, got %d", len(changes))
+	user := NewUser()
+
+	err := user.Create(dto)
+	if err == nil {
+		t.Errorf("Expected an error for invalid lastname, got none")
+	} else {
+		expectedErrorMsg := "lastname is not valid"
+		if err.Error() != expectedErrorMsg {
+			t.Errorf("Expected error '%s', got '%s'", expectedErrorMsg, err.Error())
+		}
+	}
+}
+
+func TestCreateUser_FailInvalidName(t *testing.T) {
+	dto := UserCreateDto{
+		ID:           "1",
+		Name:         "J",
+		Lastname:     "Doe",
+		Email:        "user@test.app",
+		PasswordHash: "14$%&/()=?¡",
 	}
 
-	change := changes[0]
-	if change.Name() != EventUserCreated {
-		t.Fatalf("expected event %q, got %q", EventUserCreated, change.Name())
+	user := NewUser()
+
+	err := user.Create(dto)
+	if err == nil {
+		t.Errorf("Expected an error for invalid name, got none")
+	} else {
+		expectedErrorMsg := "name is not valid"
+		if err.Error() != expectedErrorMsg {
+			t.Errorf("Expected error '%s', got '%s'", expectedErrorMsg, err.Error())
+		}
+	}
+}
+func TestCreateUser_FaildInvalidID(t *testing.T) {
+	dto := UserCreateDto{
+		Name:         "John",
+		Lastname:     "Doe",
+		Email:        "user@test.app",
+		PasswordHash: "14$%&/()=?¡",
 	}
 
-	createdData, ok := change.Data().(UserCreated)
-	if !ok {
-		t.Fatalf("expected data of type UserCreated, got %T", change.Data())
+	user := NewUser()
+
+	err := user.Create(dto)
+	if err == nil {
+		t.Errorf("Expected an error for invalid id, got none")
+	} else {
+		expectedErrorMsg := "id is required"
+		if err.Error() != expectedErrorMsg {
+			t.Errorf("Expected error '%s', got '%s'", expectedErrorMsg, err.Error())
+		}
 	}
 
-	if createdData.Name != userNew.Name || createdData.Lastname != userNew.Lastname || createdData.Email != userNew.Email {
-		t.Fatalf("event data does not match: %#v", createdData)
-	}
-
-	if createdData.PasswordHash == userNew.Password {
-		t.Fatal("password was not hashed")
-	}
 }
