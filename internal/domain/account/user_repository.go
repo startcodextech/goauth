@@ -3,7 +3,7 @@ package account
 import "context"
 
 type (
-	// UserRepository represents the user's repository contract.
+	// UserRepository represents the user's persistence contract.
 	// This contract is used to persist and retrieve user's data.
 	UserRepository interface {
 		// Save function persists a user.

@@ -3,6 +3,7 @@ package account
 import (
 	"encoding/json"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/google/uuid"
 	"github.com/startcodextech/goauth/internal/domain/account"
 )
 
@@ -13,7 +14,7 @@ func CreateUserCommandHandler(msg *message.Message) ([]message.Message, error) {
 		return nil, err
 	}
 
-	payload.ID = msg.UUID
+	payload.ID = uuid.New().String()
 
 	user := account.NewUser()
 	err := user.Create(payload)

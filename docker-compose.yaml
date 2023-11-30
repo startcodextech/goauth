@@ -11,7 +11,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      MONGO_URL: mongodb://root:root@mongo:27017
+      MONGO_URL: mongodb://root:root@mongodb:27017
       NATS_URL: nats://nats:4222
     depends_on:
       - mongo
