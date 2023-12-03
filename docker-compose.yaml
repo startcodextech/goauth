@@ -5,40 +5,43 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-      #target: system
+      target: system
     restart: "no"
-    container_name: service
+    mem_limit: 256m
+    cpus: 0.5
+    cpuset: '0'
+    container_name: server
     ports:
       - "8080:8080"
-    environment:
-      MONGO_URL: mongodb://root:root@mongodb:27017
-      NATS_URL: nats://nats:4222
-    depends_on:
-      - mongo
-      #- nats
+    env_file:
+      - .env
+      #NATS_URL: nats://nats:4222
+        #  depends_on:
+      #  - mongo
+      #  - nats
 
-  mongo:
-    image: mongo
-    restart: "no"
-    container_name: goauth-mongodb
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=root
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./docker-data/mongodb:/data/db
+    #  mongo:
+    #  image: mongo
+    #  restart: "no"
+    #  container_name: goauth-mongodb
+        #  environment:
+        #  - MONGO_INITDB_ROOT_USERNAME=root
+      #  - MONGO_INITDB_ROOT_PASSWORD=root
+        #  ports:
+      #  - "27017:27017"
+        #  volumes:
+      #  - ./docker-data/mongodb:/data/db
 
 
-  nats:
-    image: nats
-    restart: "no"
-    container_name: goauth-natsjetstream
-    ports:
-      - "4222:4222"
-      - "8222:8222"
-    command:
-      - "--http_port=8222"
-      - "--jetstream"
-    volumes:
-      - ./docker-data/nats_data:/tmp/nats/jetstream
+#  nats:
+    #  image: nats
+    #  restart: "no"
+    #  container_name: goauth-natsjetstream
+      #  ports:
+      #  - "4222:4222"
+      #  - "8222:8222"
+      #  command:
+      #  - "--http_port=8222"
+      #  - "--jetstream"
+      #  volumes:
+      #  - ./docker-data/nats_data:/tmp/nats/jetstream

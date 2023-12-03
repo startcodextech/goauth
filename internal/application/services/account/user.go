@@ -3,6 +3,7 @@ package account
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	"github.com/startcodextech/goauth/internal/domain/account"
 	"golang.org/x/crypto/bcrypt"
 	"regexp"
@@ -20,7 +21,7 @@ const (
 )
 
 type (
-	// UserService represents the service for managing users.
+	// UserService represents the server for managing users.
 	UserService struct {
 		repository account.UserRepository
 	}
@@ -29,7 +30,7 @@ type (
 // Ensure UserService implements the account.UserService interface.
 var _ account.UserService = (*UserService)(nil)
 
-// NewUserService creates a new user service.
+// NewUserService creates a new user server.
 // It requires a user repository to be injected.
 func NewUserService(repository account.UserRepository) UserService {
 	return UserService{
@@ -42,7 +43,7 @@ func NewUserService(repository account.UserRepository) UserService {
 // one lowercase letter, one number and one special character.
 // The special characters are: @[]^_!"#$%&'()*+,-./:;{}<>|=~?
 // The special characters are defined in the passwordSpecialCharRegexp variable.
-func (UserService) isValidPassword(pwd string) bool {
+func (s UserService) isValidPassword(pwd string) bool {
 	if len(pwd) < 8 {
 		return false
 	}
@@ -66,21 +67,31 @@ func (UserService) isValidPassword(pwd string) bool {
 }
 
 // Create creates a new user.
-func (s UserService) Create(ctx context.Context, data account.UserRegisterDto) error {
+func (s UserService) Create(ctx context.Context, data account.UserRegisterDto) (string, error) {
+
+	emailRegistred, err := s.IsExists(ctx, data.Email)
+	if err != nil {
+		return "", err
+	}
+	if emailRegistred {
+		return "", errors.New("user already exists")
+	}
 
 	if !s.isValidPassword(data.Password) {
-		return errors.New("password is not valid")
+		return "", errors.New("password is not valid")
 	}
 
 	pwdBytes, err := bcrypt.GenerateFromPassword([]byte(data.Password), passwordCost)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	user := account.NewUser()
 
+	id := uuid.New().String()
+
 	err = user.Create(account.UserCreateDto{
-		ID:           data.ID,
+		ID:           id,
 		Name:         data.Name,
 		Lastname:     data.Lastname,
 		Email:        data.Email,
@@ -91,14 +102,31 @@ func (s UserService) Create(ctx context.Context, data account.UserRegisterDto) e
 		AppleID:      data.AppleID,
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	s.repository.Save(ctx, user)
 	err = s.repository.Commit(ctx)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return id, nil
+}
+
+// IsExists checks if a user exists.
+// It returns true if the user exists, otherwise it returns false.
+// It returns an error if the operation fails.
+// The email parameter is the email of the user to check.
+func (s UserService) IsExists(ctx context.Context, email string) (bool, error) {
+	filter := map[string]interface{}{
+		"email": email,
+	}
+
+	results, err := s.repository.Find(ctx, filter)
+	if err != nil {
+		return false, err
+	}
+
+	return len(results) > 0, nil
 }

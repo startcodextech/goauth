@@ -17,3 +17,6 @@
 docker-data
 .vscode
 .idea
+
+.env
+.env.*

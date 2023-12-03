@@ -56,14 +56,18 @@ func (r *MongoRepository[T]) Save(ctx context.Context, model persistence.Model) 
 	opts := options.Update().SetUpsert(true)
 	op := func(ctx mongo.SessionContext) error {
 
-		document, err := r.marshal(model)
+		data, err := r.marshal(model)
 		if err != nil {
 			return err
 		}
 
 		filter := bson.M{"_id": model.ID()}
 
-		_, err = r.collection.UpdateOne(ctx, filter, document, opts)
+		update := bson.M{
+			"$set": data,
+		}
+
+		_, err = r.collection.UpdateOne(ctx, filter, update, opts)
 		return err
 	}
 	r.operations = append(r.operations, op)
@@ -82,7 +86,7 @@ func (r *MongoRepository[T]) Delete(ctx context.Context, ID string) {
 
 // Find retrieves users from the persistence.
 // It can retrieve all the users or filter them by a criteria.
-func (r *MongoRepository[T]) Find(ctx context.Context, filter map[string]interface{}) ([]persistence.Model, error) {
+func (r *MongoRepository[T]) Find(ctx context.Context, filter map[string]interface{}, factoryModel func() persistence.Model) ([]persistence.Model, error) {
 
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
@@ -103,7 +107,7 @@ func (r *MongoRepository[T]) Find(ctx context.Context, filter map[string]interfa
 			return nil, err
 		}
 
-		var model persistence.Model
+		model := factoryModel()
 		if err = model.UnmarshalFromMap(data); err != nil {
 			return nil, err
 		}
@@ -160,13 +164,13 @@ func (r *MongoRepository[T]) Commit(ctx context.Context) error {
 
 // marshal converts the user domain entity to a mongodb document.
 // This is needed because the bson package doesn't support
-func (r *MongoRepository[T]) marshal(model persistence.Model) ([]byte, error) {
+func (r *MongoRepository[T]) marshal(model persistence.Model) (T, error) {
 	var entity T
 
-	err := json.Unmarshal(model.Marshal(), entity)
+	err := json.Unmarshal(model.Marshal(), &entity)
 	if err != nil {
-		return nil, err
+		return entity, err
 	}
 
-	return bson.Marshal(&entity)
+	return entity, nil
 }

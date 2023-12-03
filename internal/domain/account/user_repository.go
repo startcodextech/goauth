@@ -1,6 +1,8 @@
 package account
 
-import "context"
+import (
+	"context"
+)
 
 type (
 	// UserRepository represents the user's persistence contract.

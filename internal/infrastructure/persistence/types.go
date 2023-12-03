@@ -17,7 +17,7 @@ type (
 		StartTx(ctx context.Context) (interface{}, error)
 		SetTx(session interface{})
 		Save(ctx context.Context, model Model)
-		Find(ctx context.Context, filter map[string]interface{}) ([]Model, error)
+		Find(ctx context.Context, filter map[string]interface{}, factoryModel func() Model) ([]Model, error)
 		Delete(ctx context.Context, ID string)
 		Commit(ctx context.Context) error
 	}
