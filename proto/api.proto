@@ -1,17 +1,17 @@
 syntax = "proto3";
 
-package grpc;
-
 import "google/protobuf/any.proto";
 
-enum Status {
-  SUCCESS = 0;
-  FAILURE = 1;
-  PENDING = 2;
-}
+package proto;
 
 message StandardResponse {
-  Status status = 1;
+  int32 status = 1;
   string error = 2;
   google.protobuf.Any data = 3;
+}
+
+message StandardResponseWithString {
+  int32 status = 1;
+  string error = 2;
+  string data = 3;
 }

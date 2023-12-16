@@ -1,12 +1,11 @@
 syntax = "proto3";
 
-package grpc;
+import "api.proto";
 
-import "internal/infrastructure/grpc/api.proto";
-
+package proto;
 
 service AccountService {
-  rpc CreateUser (CreateUserRequest) returns (StandardResponse);
+  rpc CreateUser(CreateUserRequest) returns (StandardResponseWithString) {}
 }
 
 message CreateUserRequest {

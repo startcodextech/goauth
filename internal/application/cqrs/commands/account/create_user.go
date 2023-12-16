@@ -6,6 +6,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	account2 "github.com/startcodextech/goauth/internal/application/cqrs/events/account"
 	"github.com/startcodextech/goauth/internal/domain/account"
+	"github.com/startcodextech/goauth/internal/infrastructure/grpc"
 )
 
 // CreateUserHandler is a command to create a new user
@@ -25,12 +26,12 @@ func (c CreateUserHandler) HandlerName() string {
 
 // NewCommand returns a new CreateUserHandler
 func (c CreateUserHandler) NewCommand() interface{} {
-	return &CreateUser{}
+	return &grpc.CreateUser{}
 }
 
 // Handle handles the command
 func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) error {
-	cmd := command.(*CreateUser)
+	cmd := command.(*grpc.CreateUser)
 
 	id, err := c.service.Create(ctx, account.UserRegisterDto{
 		Name:        cmd.Name,

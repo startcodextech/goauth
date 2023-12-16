@@ -2,6 +2,6 @@ type: google.api.Service
 config_version: 3
 http:
   rules:
-    - selector: grpc.AccountService.CreateUser
-      post: /user
+    - selector: proto.AccountService.CreateUser
+      post: /api/v1/account/user
       body: "*"

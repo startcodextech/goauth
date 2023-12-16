@@ -3,13 +3,12 @@ openapiOptions:
     - file: "account.proto"
       option:
         info:
-          title: Account Service
+          title: Magnament Users
           version: "0.0.1"
-        basePath: /api/v1/account
   method:
-    - method: grpc.AccountService.CreateUser
+    - method: proto.AccountService.CreateUser
       option:
         operationId: createUser
         tags:
           - Account
-        summary: Create user
+        summary: Create a new User
