@@ -1,13 +1,13 @@
 openapiOptions:
   file:
-    - file: "."
+    - file: "account.proto"
       option:
         info:
           title: Account Service
           version: "0.0.1"
-        basePath: /
+        basePath: /api/v1/account
   method:
-    - method: account.AccountService.CreateUser
+    - method: grpc.AccountService.CreateUser
       option:
         operationId: createUser
         tags:

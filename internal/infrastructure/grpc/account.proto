@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package grpc;
+
+import "internal/infrastructure/grpc/api.proto";
+
+
+service AccountService {
+  rpc CreateUser (CreateUserRequest) returns (StandardResponse);
+}
+
+message CreateUserRequest {
+  CreateUser user = 1;
+}
+
+message CreateUser {
+  string name = 1;
+  string last_name = 2;
+  string email = 3;
+  string password = 4;
+  string facebook_id = 5;
+  string google_id = 6;
+  string apple_id = 7;
+  string microsoft_id = 8;
+}
