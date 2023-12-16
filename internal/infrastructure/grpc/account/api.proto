@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+import "internal/infrastructure/grpc/api.proto";
+import "internal/application/cqrs/commands/account/user_cmd.proto";
+
+package account;
+
+option go_package = "github.com/startcodextech/goauth/internal/infrastructure/grpc/account";
+
+
+service AccountService {
+  rpc CreateUser (CreateUserRequest) returns (StandardResponse);
+}
+
+message CreateUserRequest {
+  CreateUser user = 1;
+}

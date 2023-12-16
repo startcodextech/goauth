@@ -1,0 +1,15 @@
+openapiOptions:
+  file:
+    - file: "."
+      option:
+        info:
+          title: Account Service
+          version: "0.0.1"
+        basePath: /
+  method:
+    - method: account.AccountService.CreateUser
+      option:
+        operationId: createUser
+        tags:
+          - Account
+        summary: Create user

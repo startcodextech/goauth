@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+enum Status {
+  SUCCESS = 0;
+  FAILURE = 1;
+  PENDING = 2;
+}
+
+message StandardResponse {
+  Status status = 1;
+  string error = 2;
+  google.protobuf.Any data = 3;
+}

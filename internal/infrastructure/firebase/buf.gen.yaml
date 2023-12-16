@@ -1,0 +1,28 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/startcodextech/goauth
+    except:
+      - buf.build/googleapis/googleapis
+plugins:
+  - name: go
+    out: .
+    opt:
+      - paths=source_relative
+  - name: go-grpc
+    out: .
+    opt:
+      - paths=source_relative
+  - name: grpc-gateway
+    out: .
+    opt:
+      - paths=source_relative
+      - grpc-api_configuration=../../../api/account/api.anottations.yaml
+  - name: openapiv2
+    out: ../../../api/account
+    opt:
+      - grpc_api_configuration=../../../api/account/api.anottations.yaml
+      - openapi_configuration=../../../api/account/api.openapi.yaml
+      - allow_merge=true
+      - merge_file_name=api
