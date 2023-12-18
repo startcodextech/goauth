@@ -29,3 +29,8 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 This installs the `protoc` generator plugins we need to generate the stubs. Make sure to add `$GOPATH/bin` to your `$PATH`
 so that executables installed via `go get` are available on your `$PATH`.
+
+## Google Apis Proto
+
+- [google/api/annotations.proto](https://github.com/googleapis/googleapis/blob/master/google/api/annotations.proto)
+- [google/api/http.proto](https://github.com/googleapis/googleapis/blob/master/google/api/http.proto)

@@ -6,23 +6,23 @@ managed:
     except:
       - buf.build/googleapis/googleapis
 plugins:
-  - name: go
+  - plugin: buf.build/grpc/go
     out: proto
     opt:
       - paths=source_relative
-  - name: go-grpc
+
+  - plugin: buf.build/protocolbuffers/go
     out: proto
     opt:
       - paths=source_relative
-  - name: grpc-gateway
+
+  - plugin: buf.build/grpc-ecosystem/gateway:v2.18.1
     out: proto
     opt:
       - paths=source_relative
-      - grpc_api_configuration=api/api.anottations.yaml
-  - name: openapiv2
+
+  - plugin: buf.build/grpc-ecosystem/openapiv2:v2.18.1
     out: api/swagger
     opt:
-      - grpc_api_configuration=api/api.anottations.yaml
-      - openapi_configuration=api/api.openapi.yaml
       - allow_merge=true
       - merge_file_name=api

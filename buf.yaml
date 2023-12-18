@@ -1,8 +1,4 @@
-version: v1beta1
-
-build:
-  roots:
-    - proto
+version: v1
 deps:
   - buf.build/googleapis/googleapis
 lint:
@@ -13,3 +9,8 @@ lint:
 breaking:
   use:
     - FILE
+  ignore:
+    - google/api
+build:
+  excludes:
+    - google/api

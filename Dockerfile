@@ -18,10 +18,10 @@ ENV TZ=UTC
 
 COPY --from=dev /goauth/server /goauth/server
 
-#HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-#  CMD [ "wget", "localhost:8080/health", "-q", "-O", "-" ]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD [ "wget", "localhost:8000/health", "-q", "-O", "-" ]
 
 EXPOSE 8000
-EXPOSE 9090
+EXPOSE 8080
 
 CMD ["/goauth/server"]

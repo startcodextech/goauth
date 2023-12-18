@@ -5,68 +5,85 @@ import (
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	server "github.com/startcodextech/goauth/internal/infrastructure/http"
 	"github.com/startcodextech/goauth/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"log"
+	"google.golang.org/grpc/metadata"
 	"net"
 	"net/http"
+	"strings"
 )
 
 const (
 	grpcNetwork = "tcp"
-	grpcAddress = "0.0.0.0:9090"
-	httpAddress = "0.0.0.0:8000"
+	grpcAddress = "0.0.0.0:8080"
+)
+
+var (
+	allowedHeaders = map[string]struct{}{
+		"x-request-id": {},
+	}
 )
 
 func Start(ctx context.Context, commandBus *cqrs.CommandBus, eventSubscriber message.Subscriber, logger watermill.LoggerAdapter) {
 
-	listen, err := net.Listen(grpcNetwork, grpcAddress)
-	if err != nil {
-		log.Fatalln("Failed to listen:", err)
-	}
-
 	rpcServer := grpc.NewServer()
-
-	accountService := NewAccountService(commandBus, eventSubscriber, logger)
-	proto.RegisterAccountServiceServer(rpcServer, accountService)
-
-	go func() {
-		err := rpcServer.Serve(listen)
-		if err != nil {
-			logger.Error("", err, nil)
-		}
-	}()
-
-	conn, err := grpc.Dial(grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	listenRpc, err := net.Listen(grpcNetwork, grpcAddress)
 	if err != nil {
-
+		logger.Error("", err, nil)
+		panic(err)
 	}
-	defer func(conn *grpc.ClientConn, logger watermill.LoggerAdapter) {
-		err := conn.Close()
+
+	go func(server *grpc.Server, listen net.Listener, commandBus *cqrs.CommandBus, eventSubscriber message.Subscriber, logger watermill.LoggerAdapter) {
+
+		accountService := NewAccountService(commandBus, eventSubscriber, logger)
+		proto.RegisterAccountServiceServer(server, accountService)
+
+		err := server.Serve(listen)
 		if err != nil {
 			logger.Error("", err, nil)
+			panic(err)
 		}
-	}(conn, logger)
+	}(rpcServer, listenRpc, commandBus, eventSubscriber, logger)
 
-	mux := runtime.NewServeMux()
+	mux := runtime.NewServeMux(
+		runtime.WithOutgoingHeaderMatcher(isHeaderAllowed),
+		runtime.WithMetadata(func(ctx context.Context, request *http.Request) metadata.MD {
+			header := request.Header.Get("Authorization")
+			md := metadata.Pairs("auth", header)
+			return md
+		}),
+		runtime.WithErrorHandler(func(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, writer http.ResponseWriter, request *http.Request, err error) {
+			newError := runtime.HTTPStatusError{
+				HTTPStatus: 400,
+				Err:        err,
+			}
+			runtime.DefaultHTTPErrorHandler(ctx, mux, marshaler, writer, request, &newError)
+		}),
+	)
 
-	err = proto.RegisterAccountServiceHandler(ctx, mux, conn)
+	dialOptions := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	err = proto.RegisterAccountServiceHandlerFromEndpoint(ctx, mux, grpcAddress, dialOptions)
 	if err != nil {
-		if err != nil {
-			logger.Error("", err, nil)
-		}
+		logger.Error("", err, nil)
+		panic(err)
 	}
 
-	gwServer := &http.Server{
-		Addr:    httpAddress,
-		Handler: mux,
+	serverHttp := server.New()
+	serverHttp.Group("api/v1/*", adaptor.HTTPHandler(mux))
+	go server.Start(serverHttp, logger)
+
+}
+
+func isHeaderAllowed(s string) (string, bool) {
+	if _, isAllowed := allowedHeaders[s]; isAllowed {
+		return strings.ToUpper(s), true
 	}
-
-	logger.Info("Serving gRPC-Gateway on connection", nil)
-
-	go func(server *http.Server) {
-		log.Fatalln(server.ListenAndServe())
-	}(gwServer)
+	return s, false
 }

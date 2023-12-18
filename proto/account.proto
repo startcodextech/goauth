@@ -1,11 +1,19 @@
 syntax = "proto3";
 
+option go_package = "github.com/startcodextech/goauth;proto";
+
+import "google/api/annotations.proto";
 import "api.proto";
 
 package proto;
 
 service AccountService {
-  rpc CreateUser(CreateUserRequest) returns (StandardResponseWithString) {}
+  rpc CreateUser(CreateUserRequest) returns (StandardResponseWithString) {
+    option (google.api.http) = {
+      post: "/api/v1/account/user"
+      body: "*"
+    };
+  }
 }
 
 message CreateUserRequest {
