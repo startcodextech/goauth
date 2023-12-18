@@ -16,6 +16,7 @@ require (
 
 require (
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
+	github.com/go-chi/chi/v5 v5.0.10 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect

@@ -12,7 +12,8 @@ services:
     cpuset: '0'
     container_name: server
     ports:
-      - "8080:8080"
+      - "8000:8000"
+      - "9090:9090"
     env_file:
       - .env
       #NATS_URL: nats://nats:4222

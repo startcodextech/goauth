@@ -7,6 +7,7 @@ import (
 	"github.com/startcodextech/goauth/internal/application/cqrs/commands"
 	"github.com/startcodextech/goauth/internal/application/cqrs/events"
 	"github.com/startcodextech/goauth/internal/application/services"
+	"github.com/startcodextech/goauth/internal/infrastructure/grpc"
 	"github.com/startcodextech/goauth/internal/infrastructure/messaging/gochannel"
 	"github.com/startcodextech/goauth/internal/infrastructure/persistence/mongodb"
 	"os"
@@ -14,6 +15,8 @@ import (
 
 func main() {
 	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	logger := watermill.NewStdLogger(false, true)
 
@@ -32,7 +35,7 @@ func main() {
 
 	cqrsMarshaler := cqrs.NewCqrsMarshaler()
 	cqrsRouter := cqrs.NewCqrsRouter(logger)
-	_ = cqrs.NewCommandBus(pubSub, cqrsMarshaler, logger)
+	commandBus := cqrs.NewCommandBus(pubSub, cqrsMarshaler, logger)
 	commandProcessor := cqrs.NewCommandProcessor(pubSub, cqrsRouter, cqrsMarshaler, logger)
 	eventBus := cqrs.NewEventBus(pubSub, cqrsMarshaler, logger)
 	eventProcessor := cqrs.NewEventProcessor(pubSub, cqrsRouter, cqrsMarshaler, logger)
@@ -40,8 +43,11 @@ func main() {
 	commands.RunHandlers(commandProcessor, eventBus, svcs, logger)
 	events.RunHandlers(eventProcessor, eventBus, svcs, logger)
 
-	if err := cqrsRouter.Run(context.Background()); err != nil {
+	grpc.Start(ctx, commandBus, pubSub, logger)
+
+	if err := cqrsRouter.Run(ctx); err != nil {
 		logger.Error("Failed to run cqrs router", err, nil)
 		panic(err)
 	}
+
 }
