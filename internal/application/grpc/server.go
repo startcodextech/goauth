@@ -2,13 +2,13 @@ package grpc
 
 import (
 	"context"
-	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/startcodextech/goauth/internal/application/cqrs/events"
+	"github.com/startcodextech/goauth/internal/application/cqrs/events/types"
 	"github.com/startcodextech/goauth/proto"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -34,14 +34,14 @@ var (
 type Server struct {
 	ctx         context.Context
 	commandBus  *cqrs.CommandBus
-	dataChannel chan events.EventData
-	logger      watermill.LoggerAdapter
+	dataChannel chan types.EventData
+	logger      *zap.Logger
 	http        *fiber.App
 	listen      net.Listener
 	server      *grpc.Server
 }
 
-func New(ctx context.Context, serverHTTP *fiber.App, commandBus *cqrs.CommandBus, dataChanel chan events.EventData, logger watermill.LoggerAdapter) (*Server, error) {
+func New(ctx context.Context, serverHTTP *fiber.App, commandBus *cqrs.CommandBus, dataChanel chan types.EventData, logger *zap.Logger) (*Server, error) {
 
 	address := os.Getenv("PORT_RPC")
 	if len(address) == 0 {
@@ -71,15 +71,15 @@ func (s *Server) Start() {
 	go func() {
 		<-stopChan
 
-		s.logger.Info("Initiating controlled server gRPC shutdown...", nil)
+		s.logger.Info("Initiating controlled server gRPC shutdown...")
 		s.server.GracefulStop()
-		s.logger.Info("Server gRPC shut down successfully", nil)
+		s.logger.Info("Server gRPC shut down successfully")
 	}()
 
 	go func() {
 		err := s.startGRPCServer()
 		if err != nil {
-			s.logger.Error("An error occurred starting the grpc server", err, nil)
+			s.logger.Error("An error occurred starting the grpc server", zap.Error(err))
 			os.Exit(1)
 		}
 	}()
@@ -108,8 +108,11 @@ func (s *Server) configureMux() {
 
 	err := proto.RegisterAccountServiceHandlerFromEndpoint(s.ctx, mux, s.listen.Addr().String(), dialOptions)
 	if err != nil {
-		s.logger.Error("", err, nil)
-		panic(err)
+		s.logger.Error(
+			"An error occurred while registering the endpoint in the account service handle",
+			zap.Error(err),
+		)
+		os.Exit(1)
 	}
 
 	s.http.Group("api/v1/*", adaptor.HTTPHandler(mux))

@@ -3,16 +3,15 @@ package main
 import (
 	"context"
 	_ "github.com/ThreeDotsLabs/watermill"
-	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/startcodextech/goauth/internal/application/cqrs"
 	"github.com/startcodextech/goauth/internal/application/cqrs/commands"
 	"github.com/startcodextech/goauth/internal/application/cqrs/events"
+	"github.com/startcodextech/goauth/internal/application/cqrs/events/types"
 	"github.com/startcodextech/goauth/internal/application/grpc"
 	"github.com/startcodextech/goauth/internal/application/http"
 	"github.com/startcodextech/goauth/internal/application/services"
 	"github.com/startcodextech/goauth/internal/infrastructure/messaging/gochannel"
 	"github.com/startcodextech/goauth/internal/infrastructure/persistence/mongodb"
-	"github.com/startcodextech/goauth/proto"
 	"github.com/startcodextech/goauth/util/log"
 	"go.uber.org/zap"
 	"os"
@@ -43,6 +42,8 @@ func main() {
 		}
 	}()
 
+	eventsChannel := make(chan types.EventData)
+
 	svcs := services.New(ctx, mongo)
 
 	cqrsMarshaler := cqrs.NewCqrsMarshaler()
@@ -55,32 +56,11 @@ func main() {
 	commands.RunHandlers(commandProcessor, eventBus, svcs, zapLogger)
 	events.RunHandlers(eventProcessor, eventBus, svcs, zapLogger)
 
-	eventsChannel := make(chan events.EventData)
-
-	messages, err := pubSub.Subscribe(ctx, "proto.EventUserCreatedFailed")
-	if err == nil {
-		go func(messages <-chan *message.Message) {
-			for msg := range messages {
-
-				var data proto.EventUserCreatedFailed
-
-				err := cqrsMarshaler.Unmarshal(msg, &data)
-				if err == nil {
-					msg.Ack()
-					eventData := map[string]interface{}{
-						"email": data.Email,
-						"error": data.Error,
-					}
-					eventsChannel <- eventData
-				} else {
-				}
-			}
-		}(messages)
-	}
+	events.RunSubscriber(ctx, pubSub, cqrsMarshaler, eventsChannel, zapLogger)
 
 	httpServer := http.New(zapLogger)
 
-	rpcServer, err := grpc.New(ctx, httpServer.App(), commandBus, eventsChannel, logger)
+	rpcServer, err := grpc.New(ctx, httpServer.App(), commandBus, eventsChannel, zapLogger)
 	if err != nil {
 		zapLogger.Error("", zap.Error(err))
 		os.Exit(1)

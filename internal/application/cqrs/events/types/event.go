@@ -1,3 +1,3 @@
-package events
+package types
 
 type EventData map[string]interface{}

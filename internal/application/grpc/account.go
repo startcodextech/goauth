@@ -2,10 +2,10 @@ package grpc
 
 import (
 	"context"
-	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
-	"github.com/startcodextech/goauth/internal/application/cqrs/events"
+	"github.com/startcodextech/goauth/internal/application/cqrs/events/types"
 	"github.com/startcodextech/goauth/proto"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -13,11 +13,11 @@ import (
 type AccountService struct {
 	proto.UnimplementedAccountServiceServer
 	commandBus   *cqrs.CommandBus
-	logger       watermill.LoggerAdapter
-	eventChannel chan events.EventData
+	logger       *zap.Logger
+	eventChannel chan types.EventData
 }
 
-func NewAccountService(commandBus *cqrs.CommandBus, logger watermill.LoggerAdapter, dataChanel chan events.EventData) *AccountService {
+func NewAccountService(commandBus *cqrs.CommandBus, logger *zap.Logger, dataChanel chan types.EventData) *AccountService {
 	return &AccountService{
 		commandBus:   commandBus,
 		logger:       logger,
@@ -35,9 +35,11 @@ func (s *AccountService) CreateUser(ctx context.Context, request *proto.CreateUs
 
 	err := s.commandBus.Send(ctx, request.GetUser())
 	if err != nil {
-		s.logger.Error("", err, watermill.LogFields{
-			"email": request.GetUser().GetEmail(),
-		})
+		s.logger.Error(
+			"An error occurred while sending the command",
+			zap.String("email", request.GetUser().GetEmail()),
+			zap.Error(err),
+		)
 		result.Status = http.StatusInternalServerError
 		result.Error = err.Error()
 		return result, nil
