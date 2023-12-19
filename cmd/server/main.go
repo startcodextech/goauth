@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/startcodextech/goauth/internal/application/cqrs"
 	"github.com/startcodextech/goauth/internal/application/cqrs/commands"
 	"github.com/startcodextech/goauth/internal/application/cqrs/events"
@@ -10,6 +11,8 @@ import (
 	"github.com/startcodextech/goauth/internal/infrastructure/grpc"
 	"github.com/startcodextech/goauth/internal/infrastructure/messaging/gochannel"
 	"github.com/startcodextech/goauth/internal/infrastructure/persistence/mongodb"
+	"github.com/startcodextech/goauth/proto"
+	"log"
 	"os"
 )
 
@@ -43,7 +46,33 @@ func main() {
 	commands.RunHandlers(commandProcessor, eventBus, svcs, logger)
 	events.RunHandlers(eventProcessor, eventBus, svcs, logger)
 
-	grpc.Start(ctx, commandBus, pubSub, logger)
+	eventsChannel := make(chan events.EventData)
+
+	messages, err := pubSub.Subscribe(ctx, "proto.EventUserCreatedFailed")
+	if err == nil {
+		go func(messages <-chan *message.Message) {
+			for msg := range messages {
+
+				log.Printf("%v\n", msg)
+
+				var data proto.EventUserCreatedFailed
+
+				err := cqrsMarshaler.Unmarshal(msg, &data)
+				if err == nil {
+					msg.Ack()
+					eventData := map[string]interface{}{
+						"email": data.Email,
+						"error": data.Error,
+					}
+					eventsChannel <- eventData
+				} else {
+					log.Println(err)
+				}
+			}
+		}(messages)
+	}
+
+	grpc.Start(ctx, commandBus, pubSub, logger, eventsChannel)
 
 	if err := cqrsRouter.Run(ctx); err != nil {
 		logger.Error("Failed to run cqrs router", err, nil)

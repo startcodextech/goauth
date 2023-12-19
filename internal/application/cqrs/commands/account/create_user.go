@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
-	account2 "github.com/startcodextech/goauth/internal/application/cqrs/events/account"
 	"github.com/startcodextech/goauth/internal/domain/account"
 	"github.com/startcodextech/goauth/proto"
 )
@@ -44,16 +43,18 @@ func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) erro
 		MicrosoftID: cmd.MicrosoftId,
 	})
 	if err != nil {
-		err := c.eventBus.Publish(ctx, &account2.UserCreatedFailed{
+		err := c.eventBus.Publish(ctx, &proto.EventUserCreatedFailed{
 			Email: cmd.Email,
 			Error: err.Error(),
 		})
 		if err != nil {
-			c.logger.Error("Failed to publish event", err, nil)
+			c.logger.Error("Failed to publish event.go", err, nil)
 			return err
 		}
 
-		c.logger.Error("Failed to create user", err, nil)
+		c.logger.Error("Failed to create user", err, watermill.LogFields{
+			"email": cmd.Email,
+		})
 		return nil
 	}
 
@@ -61,14 +62,14 @@ func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) erro
 		"user_id": id,
 	})
 
-	err = c.eventBus.Publish(ctx, &account2.UserCreated{
+	err = c.eventBus.Publish(ctx, &proto.EventUserCreated{
 		Id:       id,
 		Name:     cmd.Name,
 		LastName: cmd.LastName,
 		Email:    cmd.Email,
 	})
 	if err != nil {
-		c.logger.Error("Failed to publish event", err, nil)
+		c.logger.Error("Failed to publish event.go", err, nil)
 		return err
 	}
 

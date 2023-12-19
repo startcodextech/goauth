@@ -101,15 +101,15 @@ func NewCommandProcessor(commandSubscriber message.Subscriber, router *message.R
 	return cmdProcessor
 }
 
-// NewEventBus creates a new event bus.
+// NewEventBus creates a new event.go bus.
 // It is used to publish events.
 func NewEventBus(eventPublisher message.Publisher, marshaler cqrs.CommandEventMarshaler, logger watermill.LoggerAdapter) *cqrs.EventBus {
 	bus, err := cqrs.NewEventBusWithConfig(eventPublisher, cqrs.EventBusConfig{
 		GeneratePublishTopic: func(params cqrs.GenerateEventPublishTopicParams) (string, error) {
-			return "events", nil
+			return params.EventName, nil
 		},
 		OnPublish: func(params cqrs.OnEventSendParams) error {
-			logger.Info("Publishing event", watermill.LogFields{
+			logger.Info("Publishing event.go", watermill.LogFields{
 				"event_name": params.EventName,
 			})
 
@@ -121,26 +121,26 @@ func NewEventBus(eventPublisher message.Publisher, marshaler cqrs.CommandEventMa
 		Logger:    logger,
 	})
 	if err != nil {
-		logger.Error("Failed to create event bus", err, nil)
+		logger.Error("Failed to create event.go bus", err, nil)
 		panic(err)
 	}
 
 	return bus
 }
 
-// NewEventProcessor creates a new event processor.
+// NewEventProcessor creates a new event.go processor.
 // It is used to handle events.
-func NewEventProcessor(eventSubscriber message.Subscriber, router *message.Router, marshaler cqrs.CommandEventMarshaler, logger watermill.LoggerAdapter) *cqrs.EventGroupProcessor {
-	processor, err := cqrs.NewEventGroupProcessorWithConfig(
+func NewEventProcessor(eventSubscriber message.Subscriber, router *message.Router, marshaler cqrs.CommandEventMarshaler, logger watermill.LoggerAdapter) *cqrs.EventProcessor {
+	processor, err := cqrs.NewEventProcessorWithConfig(
 		router,
-		cqrs.EventGroupProcessorConfig{
-			GenerateSubscribeTopic: func(params cqrs.EventGroupProcessorGenerateSubscribeTopicParams) (string, error) {
-				return "events", nil
+		cqrs.EventProcessorConfig{
+			GenerateSubscribeTopic: func(params cqrs.EventProcessorGenerateSubscribeTopicParams) (string, error) {
+				return params.EventName, nil
 			},
-			SubscriberConstructor: func(params cqrs.EventGroupProcessorSubscriberConstructorParams) (message.Subscriber, error) {
+			SubscriberConstructor: func(params cqrs.EventProcessorSubscriberConstructorParams) (message.Subscriber, error) {
 				return eventSubscriber, nil
 			},
-			OnHandle: func(params cqrs.EventGroupProcessorOnHandleParams) error {
+			OnHandle: func(params cqrs.EventProcessorOnHandleParams) error {
 				start := time.Now()
 
 				err := params.Handler.Handle(params.Message.Context(), params.Event)
@@ -158,7 +158,7 @@ func NewEventProcessor(eventSubscriber message.Subscriber, router *message.Route
 		},
 	)
 	if err != nil {
-		logger.Error("Failed to create event processor", err, nil)
+		logger.Error("Failed to create event.go processor", err, nil)
 		panic(err)
 	}
 

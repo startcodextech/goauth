@@ -7,6 +7,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/startcodextech/goauth/internal/application/cqrs/events"
 	server "github.com/startcodextech/goauth/internal/infrastructure/http"
 	"github.com/startcodextech/goauth/proto"
 	"google.golang.org/grpc"
@@ -28,7 +29,7 @@ var (
 	}
 )
 
-func Start(ctx context.Context, commandBus *cqrs.CommandBus, eventSubscriber message.Subscriber, logger watermill.LoggerAdapter) {
+func Start(ctx context.Context, commandBus *cqrs.CommandBus, eventSubscriber message.Subscriber, logger watermill.LoggerAdapter, dataChanel chan events.EventData) {
 
 	rpcServer := grpc.NewServer()
 	listenRpc, err := net.Listen(grpcNetwork, grpcAddress)
@@ -37,9 +38,9 @@ func Start(ctx context.Context, commandBus *cqrs.CommandBus, eventSubscriber mes
 		panic(err)
 	}
 
-	go func(server *grpc.Server, listen net.Listener, commandBus *cqrs.CommandBus, eventSubscriber message.Subscriber, logger watermill.LoggerAdapter) {
+	go func(server *grpc.Server, listen net.Listener, commandBus *cqrs.CommandBus, eventSubscriber message.Subscriber, logger watermill.LoggerAdapter, dataChanel chan events.EventData) {
 
-		accountService := NewAccountService(commandBus, eventSubscriber, logger)
+		accountService := NewAccountService(commandBus, eventSubscriber, logger, dataChanel)
 		proto.RegisterAccountServiceServer(server, accountService)
 
 		err := server.Serve(listen)
@@ -47,7 +48,7 @@ func Start(ctx context.Context, commandBus *cqrs.CommandBus, eventSubscriber mes
 			logger.Error("", err, nil)
 			panic(err)
 		}
-	}(rpcServer, listenRpc, commandBus, eventSubscriber, logger)
+	}(rpcServer, listenRpc, commandBus, eventSubscriber, logger, dataChanel)
 
 	mux := runtime.NewServeMux(
 		runtime.WithOutgoingHeaderMatcher(isHeaderAllowed),

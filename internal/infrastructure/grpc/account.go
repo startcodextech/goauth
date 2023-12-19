@@ -5,9 +5,10 @@ import (
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/startcodextech/goauth/internal/application/cqrs/events"
 	"github.com/startcodextech/goauth/proto"
-	"log"
 	"net/http"
+	"time"
 )
 
 type AccountService struct {
@@ -15,20 +16,21 @@ type AccountService struct {
 	commandBus      *cqrs.CommandBus
 	eventSubscriber message.Subscriber
 	logger          watermill.LoggerAdapter
+	eventChannel    chan events.EventData
 }
 
-func NewAccountService(commandBus *cqrs.CommandBus, eSubscriber message.Subscriber, logger watermill.LoggerAdapter) *AccountService {
+func NewAccountService(commandBus *cqrs.CommandBus, eSubscriber message.Subscriber, logger watermill.LoggerAdapter, dataChanel chan events.EventData) *AccountService {
 	return &AccountService{
 		commandBus:      commandBus,
 		eventSubscriber: eSubscriber,
 		logger:          logger,
+		eventChannel:    dataChanel,
 	}
 }
 
 func (s *AccountService) CreateUser(ctx context.Context, request *proto.CreateUserRequest) (*proto.StandardResponseWithString, error) {
-	s.logger.Info("crating user", watermill.LogFields{
-		"email": request.GetUser().GetEmail(),
-	})
+
+	reading := true
 
 	result := &proto.StandardResponseWithString{
 		Status: http.StatusCreated,
@@ -44,21 +46,26 @@ func (s *AccountService) CreateUser(ctx context.Context, request *proto.CreateUs
 		return result, nil
 	}
 
-	messages, err := s.eventSubscriber.Subscribe(ctx, "events")
-	if err != nil {
-		s.logger.Error("", err, watermill.LogFields{
-			"email": request.GetUser().GetEmail(),
-		})
-		result.Status = http.StatusInternalServerError
-		result.Error = err.Error()
-		return result, nil
-	}
-
-	go func(messages <-chan *message.Message) {
-		for msg := range messages {
-			log.Printf("received message: %s", msg.Payload)
+	for reading {
+		select {
+		case eventData := <-s.eventChannel:
+			if eventData["email"] == request.GetUser().GetEmail() {
+				reading = false
+				if err, ok := eventData["error"]; ok {
+					result.Error = err.(string)
+					result.Status = http.StatusBadRequest
+				}
+				id, ok := eventData["id"]
+				if !ok {
+					result.Status = http.StatusBadRequest
+				} else {
+					result.Data = id.(string)
+				}
+			}
+		case <-time.After(30 * time.Second):
+			reading = false
 		}
-	}(messages)
+	}
 
 	return result, nil
 }

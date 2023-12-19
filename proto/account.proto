@@ -30,3 +30,17 @@ message CreateUser {
   string apple_id = 7;
   string microsoft_id = 8;
 }
+
+// For events
+
+message EventUserCreated {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string last_name = 4;
+}
+
+message EventUserCreatedFailed {
+  string email = 1;
+  string error = 4;
+}

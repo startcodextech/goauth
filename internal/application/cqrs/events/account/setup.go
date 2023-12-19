@@ -5,9 +5,8 @@ import (
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 )
 
-func SetupHandlers(processor *cqrs.EventGroupProcessor, logger watermill.LoggerAdapter) {
-	err := processor.AddHandlersGroup(
-		"events",
+func SetupHandlers(processor *cqrs.EventProcessor, logger watermill.LoggerAdapter) {
+	err := processor.AddHandlers(
 		UserCreatedOnCreateUser{},
 		UserCreatedFailedOnCreateUser{},
 	)
