@@ -5,13 +5,14 @@ import (
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
+	"github.com/startcodextech/goauth/util/proto"
 	"time"
 )
 
 // NewCqrsMarshaler returns a new cqrs marshaler.
 // It is used to marshal/unmarshal commands and events.
 func NewCqrsMarshaler() cqrs.CommandEventMarshaler {
-	return ProtoMarshal{}
+	return proto.ProtoMarshal{}
 }
 
 // NewCommandBus creates a new command bus.

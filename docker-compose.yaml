@@ -5,17 +5,19 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-      target: system
+      target: dev
     restart: "no"
-    mem_limit: 256m
-    cpus: 0.5
-    cpuset: '0'
+    #mem_limit: 256m
+    #cpus: 0.5
+    #cpuset: '0'
     container_name: server
     ports:
-      - "8000:8000"
-      - "8080:8080"
+      - "8000:80"
+      - "8080:9090"
     env_file:
       - .env
+    volumes:
+      - .:/goauth
       #NATS_URL: nats://nats:4222
         #  depends_on:
       #  - mongo

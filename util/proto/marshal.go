@@ -1,4 +1,4 @@
-package cqrs
+package proto
 
 import (
 	"github.com/ThreeDotsLabs/watermill"

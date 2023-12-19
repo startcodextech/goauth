@@ -2,17 +2,19 @@ package main
 
 import (
 	"context"
-	"github.com/ThreeDotsLabs/watermill"
+	_ "github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/startcodextech/goauth/internal/application/cqrs"
 	"github.com/startcodextech/goauth/internal/application/cqrs/commands"
 	"github.com/startcodextech/goauth/internal/application/cqrs/events"
+	"github.com/startcodextech/goauth/internal/application/grpc"
+	"github.com/startcodextech/goauth/internal/application/http"
 	"github.com/startcodextech/goauth/internal/application/services"
-	"github.com/startcodextech/goauth/internal/infrastructure/grpc"
 	"github.com/startcodextech/goauth/internal/infrastructure/messaging/gochannel"
 	"github.com/startcodextech/goauth/internal/infrastructure/persistence/mongodb"
 	"github.com/startcodextech/goauth/proto"
-	"log"
+	"github.com/startcodextech/goauth/util/log"
+	"go.uber.org/zap"
 	"os"
 )
 
@@ -21,7 +23,14 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	logger := watermill.NewStdLogger(false, true)
+	zapLogger, _ := zap.NewProduction()
+	defer func(zapLogger *zap.Logger) {
+		err := zapLogger.Sync()
+		if err != nil {
+			zapLogger.Error("An error occurred while synchronizing the log")
+		}
+	}(zapLogger)
+	logger := log.NewLogger(zapLogger)
 
 	mongo := mongodb.New(ctx, os.Getenv("DB_NAME"), logger)
 	defer mongo.Disconnect(ctx)()
@@ -43,8 +52,8 @@ func main() {
 	eventBus := cqrs.NewEventBus(pubSub, cqrsMarshaler, logger)
 	eventProcessor := cqrs.NewEventProcessor(pubSub, cqrsRouter, cqrsMarshaler, logger)
 
-	commands.RunHandlers(commandProcessor, eventBus, svcs, logger)
-	events.RunHandlers(eventProcessor, eventBus, svcs, logger)
+	commands.RunHandlers(commandProcessor, eventBus, svcs, zapLogger)
+	events.RunHandlers(eventProcessor, eventBus, svcs, zapLogger)
 
 	eventsChannel := make(chan events.EventData)
 
@@ -52,8 +61,6 @@ func main() {
 	if err == nil {
 		go func(messages <-chan *message.Message) {
 			for msg := range messages {
-
-				log.Printf("%v\n", msg)
 
 				var data proto.EventUserCreatedFailed
 
@@ -66,13 +73,21 @@ func main() {
 					}
 					eventsChannel <- eventData
 				} else {
-					log.Println(err)
 				}
 			}
 		}(messages)
 	}
 
-	grpc.Start(ctx, commandBus, pubSub, logger, eventsChannel)
+	httpServer := http.New(zapLogger)
+
+	rpcServer, err := grpc.New(ctx, httpServer.App(), commandBus, eventsChannel, logger)
+	if err != nil {
+		zapLogger.Error("", zap.Error(err))
+		os.Exit(1)
+	}
+
+	rpcServer.Start()
+	httpServer.Start()
 
 	if err := cqrsRouter.Run(ctx); err != nil {
 		logger.Error("Failed to run cqrs router", err, nil)

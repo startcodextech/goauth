@@ -2,17 +2,17 @@ package account
 
 import (
 	"context"
-	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/startcodextech/goauth/internal/domain/account"
 	"github.com/startcodextech/goauth/proto"
+	"go.uber.org/zap"
 )
 
 // CreateUserHandler is a command to create a new user
 type CreateUserHandler struct {
 	eventBus *cqrs.EventBus
 	service  account.UserService
-	logger   watermill.LoggerAdapter
+	logger   *zap.Logger
 }
 
 // ensure CreateUserHandler implements cqrs.Command interface
@@ -48,19 +48,22 @@ func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) erro
 			Error: err.Error(),
 		})
 		if err != nil {
-			c.logger.Error("Failed to publish event.go", err, nil)
+			c.logger.Error("Failed to publish event.go", zap.Error(err))
 			return err
 		}
 
-		c.logger.Error("Failed to create user", err, watermill.LogFields{
-			"email": cmd.Email,
-		})
+		c.logger.Error(
+			"Failed to create user",
+			zap.String("email", cmd.Email),
+			zap.Error(err),
+		)
 		return nil
 	}
 
-	c.logger.Info("User created", watermill.LogFields{
-		"user_id": id,
-	})
+	c.logger.Info(
+		"User created",
+		zap.String("user_id", id),
+	)
 
 	err = c.eventBus.Publish(ctx, &proto.EventUserCreated{
 		Id:       id,
@@ -69,7 +72,7 @@ func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) erro
 		Email:    cmd.Email,
 	})
 	if err != nil {
-		c.logger.Error("Failed to publish event.go", err, nil)
+		c.logger.Error("Failed to publish event.go", zap.Error(err))
 		return err
 	}
 

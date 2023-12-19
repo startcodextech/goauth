@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
-	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/startcodextech/goauth/internal/application/cqrs/events"
 	"github.com/startcodextech/goauth/proto"
 	"net/http"
@@ -13,18 +12,16 @@ import (
 
 type AccountService struct {
 	proto.UnimplementedAccountServiceServer
-	commandBus      *cqrs.CommandBus
-	eventSubscriber message.Subscriber
-	logger          watermill.LoggerAdapter
-	eventChannel    chan events.EventData
+	commandBus   *cqrs.CommandBus
+	logger       watermill.LoggerAdapter
+	eventChannel chan events.EventData
 }
 
-func NewAccountService(commandBus *cqrs.CommandBus, eSubscriber message.Subscriber, logger watermill.LoggerAdapter, dataChanel chan events.EventData) *AccountService {
+func NewAccountService(commandBus *cqrs.CommandBus, logger watermill.LoggerAdapter, dataChanel chan events.EventData) *AccountService {
 	return &AccountService{
-		commandBus:      commandBus,
-		eventSubscriber: eSubscriber,
-		logger:          logger,
-		eventChannel:    dataChanel,
+		commandBus:   commandBus,
+		logger:       logger,
+		eventChannel: dataChanel,
 	}
 }
 
