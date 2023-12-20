@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/google/uuid"
+	"github.com/startcodextech/goauth/internal/application/cqrs/commands"
 	"github.com/startcodextech/goauth/proto"
+	"github.com/startcodextech/goauth/util/channel"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -32,19 +34,33 @@ func (s *AccountService) CreateUser(ctx context.Context, request *proto.CreateUs
 		Payload:   request.GetUser(),
 	}
 
-	err := s.commandBus.Send(ctx, cmd)
+	response := make(chan channel.ResultChannel, 1)
+	channel.AddChannel(cmd.GetCommandId(), response)
+
+	err := commands.Publish(ctx, s.commandBus, cmd.GetCommandId(), cmd, s.logger)
 	if err != nil {
-		s.logger.Error(
-			"An error occurred while sending the command",
-			zap.String("email", request.GetUser().GetEmail()),
-			zap.Error(err),
-		)
 		result.Status = http.StatusInternalServerError
 		result.Error = err.Error()
 		return result, nil
 	}
 
-	result.Data = cmd.GetCommandId()
+	err = channel.GetResult(response, channel.ResultCallback{
+		CorrelationID: cmd.GetCommandId(),
+		OnSuccess: func(i interface{}) {
+			data := i.(*proto.EventUserCreated)
+			result.Data = data.GetId()
+		},
+		OnFailed: func(err *proto.EventError) {
+			result.Error = err.GetError()
+			result.Status = http.StatusBadRequest
+		},
+		Logger: s.logger,
+	})
+	if err != nil {
+		result.Status = http.StatusInternalServerError
+		result.Error = err.Error()
+		return result, nil
+	}
 
 	return result, err
 }

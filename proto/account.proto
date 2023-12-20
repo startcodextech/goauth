@@ -47,8 +47,3 @@ message EventUserCreated {
   string last_name = 4;
   string command_id = 5;
 }
-
-message EventUserCreatedFailed {
-  string error = 1;
-  string command_id = 2;
-}

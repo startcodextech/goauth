@@ -41,11 +41,11 @@ func (e UserCreatedFailedOnCreateUser) HandlerName() string {
 }
 
 func (UserCreatedFailedOnCreateUser) NewEvent() interface{} {
-	return &proto.EventUserCreatedFailed{}
+	return &proto.EventError{}
 }
 
 func (e UserCreatedFailedOnCreateUser) Handle(ctx context.Context, event interface{}) error {
-	eventMsg, ok := event.(*proto.EventUserCreatedFailed)
+	eventMsg, ok := event.(*proto.EventError)
 	if !ok {
 		log.Printf("Se recibió un tipo de evento inesperado: %T", event)
 		return nil

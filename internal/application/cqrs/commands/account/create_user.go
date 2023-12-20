@@ -5,6 +5,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
 	"github.com/startcodextech/goauth/internal/domain/account"
 	"github.com/startcodextech/goauth/proto"
+	"github.com/startcodextech/goauth/util/channel"
 	"go.uber.org/zap"
 )
 
@@ -45,10 +46,14 @@ func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) erro
 		MicrosoftID: cmd.GetPayload().GetMicrosoftId(),
 	})
 	if err != nil {
-		err := c.eventBus.Publish(ctx, &proto.EventUserCreatedFailed{
+		event := &proto.EventError{
 			CommandId: cmd.GetCommandId(),
 			Error:     err.Error(),
-		})
+		}
+
+		channel.FinishFailed(cmd.GetCommandId(), event)
+
+		err := c.eventBus.Publish(ctx, event)
 		if err != nil {
 			c.logger.Error("Failed to publish event.go", zap.Error(err))
 			return err
@@ -63,17 +68,21 @@ func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) erro
 		return nil
 	}
 
+	event := &proto.EventUserCreated{
+		Id:       id,
+		Name:     cmd.GetPayload().GetName(),
+		LastName: cmd.GetPayload().GetLastName(),
+		Email:    cmd.GetPayload().GetEmail(),
+	}
+
+	channel.FinishSuccess(cmd.GetCommandId(), event)
+
 	c.logger.Info(
 		"User created",
 		zap.String("user_id", id),
 	)
 
-	err = c.eventBus.Publish(ctx, &proto.EventUserCreated{
-		Id:       id,
-		Name:     cmd.GetPayload().GetName(),
-		LastName: cmd.GetPayload().GetLastName(),
-		Email:    cmd.GetPayload().GetEmail(),
-	})
+	err = c.eventBus.Publish(ctx, event)
 	if err != nil {
 		c.logger.Error(
 			"Failed to publish event.go",
