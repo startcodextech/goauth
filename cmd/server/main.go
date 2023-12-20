@@ -6,7 +6,6 @@ import (
 	"github.com/startcodextech/goauth/internal/application/cqrs"
 	"github.com/startcodextech/goauth/internal/application/cqrs/commands"
 	"github.com/startcodextech/goauth/internal/application/cqrs/events"
-	"github.com/startcodextech/goauth/internal/application/cqrs/events/types"
 	"github.com/startcodextech/goauth/internal/application/grpc"
 	"github.com/startcodextech/goauth/internal/application/http"
 	"github.com/startcodextech/goauth/internal/application/services"
@@ -42,8 +41,6 @@ func main() {
 		}
 	}()
 
-	eventsChannel := make(chan types.EventData)
-
 	svcs := services.New(ctx, mongo)
 
 	cqrsMarshaler := cqrs.NewCqrsMarshaler()
@@ -56,11 +53,9 @@ func main() {
 	commands.RunHandlers(commandProcessor, eventBus, svcs, zapLogger)
 	events.RunHandlers(eventProcessor, eventBus, svcs, zapLogger)
 
-	events.RunSubscriber(ctx, pubSub, cqrsMarshaler, eventsChannel, zapLogger)
-
 	httpServer := http.New(zapLogger)
 
-	rpcServer, err := grpc.New(ctx, httpServer.App(), commandBus, eventsChannel, zapLogger)
+	rpcServer, err := grpc.New(ctx, httpServer.App(), commandBus, zapLogger)
 	if err != nil {
 		zapLogger.Error("", zap.Error(err))
 		os.Exit(1)

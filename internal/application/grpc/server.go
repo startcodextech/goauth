@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/startcodextech/goauth/internal/application/cqrs/events/types"
 	"github.com/startcodextech/goauth/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -32,16 +31,15 @@ var (
 )
 
 type Server struct {
-	ctx         context.Context
-	commandBus  *cqrs.CommandBus
-	dataChannel chan types.EventData
-	logger      *zap.Logger
-	http        *fiber.App
-	listen      net.Listener
-	server      *grpc.Server
+	ctx        context.Context
+	commandBus *cqrs.CommandBus
+	logger     *zap.Logger
+	http       *fiber.App
+	listen     net.Listener
+	server     *grpc.Server
 }
 
-func New(ctx context.Context, serverHTTP *fiber.App, commandBus *cqrs.CommandBus, dataChanel chan types.EventData, logger *zap.Logger) (*Server, error) {
+func New(ctx context.Context, serverHTTP *fiber.App, commandBus *cqrs.CommandBus, logger *zap.Logger) (*Server, error) {
 
 	address := os.Getenv("PORT_RPC")
 	if len(address) == 0 {
@@ -54,13 +52,12 @@ func New(ctx context.Context, serverHTTP *fiber.App, commandBus *cqrs.CommandBus
 	}
 
 	return &Server{
-		ctx:         ctx,
-		commandBus:  commandBus,
-		dataChannel: dataChanel,
-		logger:      logger,
-		http:        serverHTTP,
-		listen:      listen,
-		server:      grpc.NewServer(),
+		ctx:        ctx,
+		commandBus: commandBus,
+		logger:     logger,
+		http:       serverHTTP,
+		listen:     listen,
+		server:     grpc.NewServer(),
 	}, nil
 }
 
@@ -88,7 +85,7 @@ func (s *Server) Start() {
 }
 
 func (s *Server) startGRPCServer() error {
-	accountService := NewAccountService(s.commandBus, s.logger, s.dataChannel)
+	accountService := NewAccountService(s.commandBus, s.logger)
 	proto.RegisterAccountServiceServer(s.server, accountService)
 
 	err := s.server.Serve(s.listen)

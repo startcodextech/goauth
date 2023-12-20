@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccountServiceClient interface {
-	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*StandardResponseWithString, error)
+	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*ResponseWithString, error)
 }
 
 type accountServiceClient struct {
@@ -37,8 +37,8 @@ func NewAccountServiceClient(cc grpc.ClientConnInterface) AccountServiceClient {
 	return &accountServiceClient{cc}
 }
 
-func (c *accountServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*StandardResponseWithString, error) {
-	out := new(StandardResponseWithString)
+func (c *accountServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*ResponseWithString, error) {
+	out := new(ResponseWithString)
 	err := c.cc.Invoke(ctx, AccountService_CreateUser_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (c *accountServiceClient) CreateUser(ctx context.Context, in *CreateUserReq
 // All implementations must embed UnimplementedAccountServiceServer
 // for forward compatibility
 type AccountServiceServer interface {
-	CreateUser(context.Context, *CreateUserRequest) (*StandardResponseWithString, error)
+	CreateUser(context.Context, *CreateUserRequest) (*ResponseWithString, error)
 	mustEmbedUnimplementedAccountServiceServer()
 }
 
@@ -58,7 +58,7 @@ type AccountServiceServer interface {
 type UnimplementedAccountServiceServer struct {
 }
 
-func (UnimplementedAccountServiceServer) CreateUser(context.Context, *CreateUserRequest) (*StandardResponseWithString, error) {
+func (UnimplementedAccountServiceServer) CreateUser(context.Context, *CreateUserRequest) (*ResponseWithString, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
 func (UnimplementedAccountServiceServer) mustEmbedUnimplementedAccountServiceServer() {}

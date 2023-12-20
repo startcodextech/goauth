@@ -25,27 +25,29 @@ func (c CreateUserHandler) HandlerName() string {
 
 // NewCommand returns a new CreateUserHandler
 func (c CreateUserHandler) NewCommand() interface{} {
-	return &proto.CreateUser{}
+	return &proto.CommandCreateUser{}
 }
 
 // Handle handles the command
 func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) error {
-	cmd := command.(*proto.CreateUser)
+	cmd := command.(*proto.CommandCreateUser)
+
+	c.logger.Info("creating user", zap.String("command_id", cmd.GetCommandId()))
 
 	id, err := c.service.Create(ctx, account.UserRegisterDto{
-		Name:        cmd.Name,
-		Lastname:    cmd.LastName,
-		Email:       cmd.Email,
-		Password:    cmd.Password,
-		FacebookID:  cmd.FacebookId,
-		GoogleID:    cmd.GoogleId,
-		AppleID:     cmd.AppleId,
-		MicrosoftID: cmd.MicrosoftId,
+		Name:        cmd.GetPayload().GetName(),
+		Lastname:    cmd.GetPayload().GetLastName(),
+		Email:       cmd.GetPayload().GetEmail(),
+		Password:    cmd.GetPayload().GetPassword(),
+		FacebookID:  cmd.GetPayload().GetFacebookId(),
+		GoogleID:    cmd.GetPayload().GetGoogleId(),
+		AppleID:     cmd.GetPayload().GetAppleId(),
+		MicrosoftID: cmd.GetPayload().GetMicrosoftId(),
 	})
 	if err != nil {
 		err := c.eventBus.Publish(ctx, &proto.EventUserCreatedFailed{
-			Email: cmd.Email,
-			Error: err.Error(),
+			CommandId: cmd.GetCommandId(),
+			Error:     err.Error(),
 		})
 		if err != nil {
 			c.logger.Error("Failed to publish event.go", zap.Error(err))
@@ -54,7 +56,8 @@ func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) erro
 
 		c.logger.Error(
 			"Failed to create user",
-			zap.String("email", cmd.Email),
+			zap.String("command_id", cmd.GetCommandId()),
+			zap.String("email", cmd.GetPayload().GetEmail()),
 			zap.Error(err),
 		)
 		return nil
@@ -67,12 +70,17 @@ func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) erro
 
 	err = c.eventBus.Publish(ctx, &proto.EventUserCreated{
 		Id:       id,
-		Name:     cmd.Name,
-		LastName: cmd.LastName,
-		Email:    cmd.Email,
+		Name:     cmd.GetPayload().GetName(),
+		LastName: cmd.GetPayload().GetLastName(),
+		Email:    cmd.GetPayload().GetEmail(),
 	})
 	if err != nil {
-		c.logger.Error("Failed to publish event.go", zap.Error(err))
+		c.logger.Error(
+			"Failed to publish event.go",
+			zap.String("command_id", cmd.GetCommandId()),
+			zap.String("email", cmd.GetPayload().GetEmail()),
+			zap.Error(err),
+		)
 		return err
 	}
 

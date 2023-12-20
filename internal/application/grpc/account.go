@@ -3,37 +3,36 @@ package grpc
 import (
 	"context"
 	"github.com/ThreeDotsLabs/watermill/components/cqrs"
-	"github.com/startcodextech/goauth/internal/application/cqrs/events/types"
+	"github.com/google/uuid"
 	"github.com/startcodextech/goauth/proto"
 	"go.uber.org/zap"
 	"net/http"
-	"time"
 )
 
 type AccountService struct {
 	proto.UnimplementedAccountServiceServer
-	commandBus   *cqrs.CommandBus
-	logger       *zap.Logger
-	eventChannel chan types.EventData
+	commandBus *cqrs.CommandBus
+	logger     *zap.Logger
 }
 
-func NewAccountService(commandBus *cqrs.CommandBus, logger *zap.Logger, dataChanel chan types.EventData) *AccountService {
+func NewAccountService(commandBus *cqrs.CommandBus, logger *zap.Logger) *AccountService {
 	return &AccountService{
-		commandBus:   commandBus,
-		logger:       logger,
-		eventChannel: dataChanel,
+		commandBus: commandBus,
+		logger:     logger,
 	}
 }
 
-func (s *AccountService) CreateUser(ctx context.Context, request *proto.CreateUserRequest) (*proto.StandardResponseWithString, error) {
-
-	reading := true
-
-	result := &proto.StandardResponseWithString{
+func (s *AccountService) CreateUser(ctx context.Context, request *proto.CreateUserRequest) (*proto.ResponseWithString, error) {
+	result := &proto.ResponseWithString{
 		Status: http.StatusCreated,
 	}
 
-	err := s.commandBus.Send(ctx, request.GetUser())
+	cmd := &proto.CommandCreateUser{
+		CommandId: uuid.New().String(),
+		Payload:   request.GetUser(),
+	}
+
+	err := s.commandBus.Send(ctx, cmd)
 	if err != nil {
 		s.logger.Error(
 			"An error occurred while sending the command",
@@ -45,26 +44,7 @@ func (s *AccountService) CreateUser(ctx context.Context, request *proto.CreateUs
 		return result, nil
 	}
 
-	for reading {
-		select {
-		case eventData := <-s.eventChannel:
-			if eventData["email"] == request.GetUser().GetEmail() {
-				reading = false
-				if err, ok := eventData["error"]; ok {
-					result.Error = err.(string)
-					result.Status = http.StatusBadRequest
-				}
-				id, ok := eventData["id"]
-				if !ok {
-					result.Status = http.StatusBadRequest
-				} else {
-					result.Data = id.(string)
-				}
-			}
-		case <-time.After(30 * time.Second):
-			reading = false
-		}
-	}
+	result.Data = cmd.GetCommandId()
 
-	return result, nil
+	return result, err
 }

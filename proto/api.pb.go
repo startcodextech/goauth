@@ -21,7 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type StandardResponse struct {
+type Response struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -31,8 +31,8 @@ type StandardResponse struct {
 	Data   *anypb.Any `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 }
 
-func (x *StandardResponse) Reset() {
-	*x = StandardResponse{}
+func (x *Response) Reset() {
+	*x = Response{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_api_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -40,13 +40,13 @@ func (x *StandardResponse) Reset() {
 	}
 }
 
-func (x *StandardResponse) String() string {
+func (x *Response) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*StandardResponse) ProtoMessage() {}
+func (*Response) ProtoMessage() {}
 
-func (x *StandardResponse) ProtoReflect() protoreflect.Message {
+func (x *Response) ProtoReflect() protoreflect.Message {
 	mi := &file_api_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -58,33 +58,33 @@ func (x *StandardResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use StandardResponse.ProtoReflect.Descriptor instead.
-func (*StandardResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use Response.ProtoReflect.Descriptor instead.
+func (*Response) Descriptor() ([]byte, []int) {
 	return file_api_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *StandardResponse) GetStatus() int32 {
+func (x *Response) GetStatus() int32 {
 	if x != nil {
 		return x.Status
 	}
 	return 0
 }
 
-func (x *StandardResponse) GetError() string {
+func (x *Response) GetError() string {
 	if x != nil {
 		return x.Error
 	}
 	return ""
 }
 
-func (x *StandardResponse) GetData() *anypb.Any {
+func (x *Response) GetData() *anypb.Any {
 	if x != nil {
 		return x.Data
 	}
 	return nil
 }
 
-type StandardResponseWithString struct {
+type ResponseWithString struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -94,8 +94,8 @@ type StandardResponseWithString struct {
 	Data   string `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 }
 
-func (x *StandardResponseWithString) Reset() {
-	*x = StandardResponseWithString{}
+func (x *ResponseWithString) Reset() {
+	*x = ResponseWithString{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_api_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -103,13 +103,13 @@ func (x *StandardResponseWithString) Reset() {
 	}
 }
 
-func (x *StandardResponseWithString) String() string {
+func (x *ResponseWithString) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*StandardResponseWithString) ProtoMessage() {}
+func (*ResponseWithString) ProtoMessage() {}
 
-func (x *StandardResponseWithString) ProtoReflect() protoreflect.Message {
+func (x *ResponseWithString) ProtoReflect() protoreflect.Message {
 	mi := &file_api_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -121,26 +121,26 @@ func (x *StandardResponseWithString) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use StandardResponseWithString.ProtoReflect.Descriptor instead.
-func (*StandardResponseWithString) Descriptor() ([]byte, []int) {
+// Deprecated: Use ResponseWithString.ProtoReflect.Descriptor instead.
+func (*ResponseWithString) Descriptor() ([]byte, []int) {
 	return file_api_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *StandardResponseWithString) GetStatus() int32 {
+func (x *ResponseWithString) GetStatus() int32 {
 	if x != nil {
 		return x.Status
 	}
 	return 0
 }
 
-func (x *StandardResponseWithString) GetError() string {
+func (x *ResponseWithString) GetError() string {
 	if x != nil {
 		return x.Error
 	}
 	return ""
 }
 
-func (x *StandardResponseWithString) GetData() string {
+func (x *ResponseWithString) GetData() string {
 	if x != nil {
 		return x.Data
 	}
@@ -152,15 +152,14 @@ var File_api_proto protoreflect.FileDescriptor
 var file_api_proto_rawDesc = []byte{
 	0x0a, 0x09, 0x61, 0x70, 0x69, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x1a, 0x19, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x62, 0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x6a, 0x0a,
-	0x10, 0x53, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x05, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x65, 0x72, 0x72,
-	0x6f, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x12,
-	0x28, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e,
-	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
-	0x41, 0x6e, 0x79, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x5e, 0x0a, 0x1a, 0x53, 0x74, 0x61,
-	0x6e, 0x64, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x57, 0x69, 0x74,
+	0x62, 0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x62, 0x0a,
+	0x08, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x74, 0x61,
+	0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75,
+	0x73, 0x12, 0x14, 0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x12, 0x28, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x04, 0x64, 0x61, 0x74,
+	0x61, 0x22, 0x56, 0x0a, 0x12, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x57, 0x69, 0x74,
 	0x68, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75,
 	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12,
 	0x14, 0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
@@ -190,12 +189,12 @@ func file_api_proto_rawDescGZIP() []byte {
 
 var file_api_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_api_proto_goTypes = []interface{}{
-	(*StandardResponse)(nil),           // 0: proto.StandardResponse
-	(*StandardResponseWithString)(nil), // 1: proto.StandardResponseWithString
-	(*anypb.Any)(nil),                  // 2: google.protobuf.Any
+	(*Response)(nil),           // 0: proto.Response
+	(*ResponseWithString)(nil), // 1: proto.ResponseWithString
+	(*anypb.Any)(nil),          // 2: google.protobuf.Any
 }
 var file_api_proto_depIdxs = []int32{
-	2, // 0: proto.StandardResponse.data:type_name -> google.protobuf.Any
+	2, // 0: proto.Response.data:type_name -> google.protobuf.Any
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -210,7 +209,7 @@ func file_api_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_api_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StandardResponse); i {
+			switch v := v.(*Response); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -222,7 +221,7 @@ func file_api_proto_init() {
 			}
 		}
 		file_api_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StandardResponseWithString); i {
+			switch v := v.(*ResponseWithString); i {
 			case 0:
 				return &v.state
 			case 1:

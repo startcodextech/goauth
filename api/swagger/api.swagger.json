@@ -23,7 +23,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/protoStandardResponseWithString"
+              "$ref": "#/definitions/protoResponseWithString"
             }
           },
           "default": {
@@ -87,7 +87,7 @@
         }
       }
     },
-    "protoStandardResponseWithString": {
+    "protoResponseWithString": {
       "type": "object",
       "properties": {
         "status": {
