@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"github.com/gofiber/contrib/fiberzap/v2"
+	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -38,6 +39,18 @@ func New(logger *zap.Logger) *Server {
 		Logger: logger,
 	}))
 	app.Use(recover.New())
+
+	basePath, err := os.Getwd()
+	if err == nil {
+		app.Use(swagger.New(
+			swagger.Config{
+				BasePath: basePath,
+				FilePath: "./swagger.json",
+				Path:     "swagger",
+				Title:    "API Documentation",
+			}),
+		)
+	}
 
 	return &Server{
 		logger:  logger,

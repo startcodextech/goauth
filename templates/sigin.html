@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenido a Start Codex</title>
+    <style>
+        @media only screen and (max-width: 600px) {
+            table {
+                padding: 0 16px;
+            }
+
+            td {
+                padding: 0 24px;
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f4;">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="100%"
+       style="max-width: 600px; margin-top: 20px;">
+    <tr>
+        <td bgcolor="#ffffff" style="padding: 40px 24px; text-align: left; border-radius: 8px 8px 0 0;">
+            <img src="https://start-codex.web.app/images-email/logo.png" alt="Start Codex Logo" width="120"/>
+        </td>
+    </tr>
+    <tr>
+        <td bgcolor="#ffffff" style="padding: 0 30px; text-align: center;">
+            <h1 style="color: #111111; font-size: 24px; font-weight: bold; margin: 0; padding-bottom: 20px;">Bienvenido {{params.name}},
+                a Start Codex</h1>
+        </td>
+    </tr>
+    <tr>
+        <td bgcolor="#ffffff" style="padding: 24px; text-align: center;">
+            <img src="https://start-codex.web.app/images-email/email_check.png" alt="Email Icon" width="80"
+                 style="margin-bottom: 20px;"/>
+            <p style="margin: 20px 0; color: #555555; font-size: 16px;">Creamos una cuenta personal para usted. Por
+                favor confirma tu dirección de correo electrónico y utiliza nuestro servicio al máximo.</p>
+            <a href="{{params.url}}" target="_blank"
+               style="font-size: 16px; font-weight: bold; color: #ffffff; text-decoration: none; background-color: #1a73e8; padding: 15px 25px; border-radius: 4px; display: inline-block; margin: 30px 0">Confirmar
+                Correo</a>
+        </td>
+    </tr>
+    <tr>
+        <td bgcolor="#ffffff"
+            style="text-align: center; padding: 0 24px 40px 24px; ; color: #555555; font-size: 16px; border-radius: 0 0 8px 8px;">
+            <p>Si no puedes verificar tu correo electrónico por este botón, haz clic en este siguiente enlace o copia
+                este enlace en el navegador:</p>
+            <a href="{{params.url}}" target="_blank"
+               style="color: #1a73e8; text-decoration: none; word-break: break-all;">{{params.url}}</a>
+        </td>
+    </tr>
+    <tr>
+        <td bgcolor="#f4f4f4" style="text-align: center; padding: 20px; color: #777777; font-size: 12px;">
+            <div style="margin-bottom: 8px;">www.startcodex.com</div>
+            <div>© 2023 Start Codex, Calle 6 # 17-43 Aguachica, Cesar - Colombia</div>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

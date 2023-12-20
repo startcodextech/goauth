@@ -3,7 +3,7 @@ temp_dir = "tmp"
 
 [build]
   # Just plain old shell command. You could use `make` as well.
-  cmd = "CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./tmp/main ./cmd/server/main.go"
+  cmd = "cp ./api/swagger/api.swagger.json ./swagger.json && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./tmp/main ./cmd/server/main.go"
   # Binary file yields from `cmd`.
   bin = "tmp/main"
   # Customize binary.

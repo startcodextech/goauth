@@ -14,9 +14,9 @@ EXPOSE 9090
 
 FROM base as dev
 
-WORKDIR /goauth
-
 RUN go install github.com/cosmtrek/air@latest
+
+COPY ./api/swagger/api.swagger.json ./swagger.json
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./tmp/main ./cmd/server/main.go
 
@@ -33,6 +33,7 @@ RUN apk --no-cache add ca-certificates wget tzdata && update-ca-certificates
 ENV TZ=UTC
 
 COPY --from=build /goauth/server /goauth/server
+COPY --from=build /goauth/api/swagger/api.swagger.json /goauth/swagger.json
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
   CMD [ "wget", "localhost:8000/health", "-q", "-O", "-" ]
