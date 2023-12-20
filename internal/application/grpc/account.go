@@ -34,8 +34,7 @@ func (s *AccountService) CreateUser(ctx context.Context, request *proto.CreateUs
 		Payload:   request.GetUser(),
 	}
 
-	response := make(chan channel.ResultChannel, 1)
-	channel.AddChannel(cmd.GetCommandId(), response)
+	channel.Channels.AddChannel(cmd.GetCommandId())
 
 	err := commands.Publish(ctx, s.commandBus, cmd.GetCommandId(), cmd, s.logger)
 	if err != nil {
@@ -44,8 +43,7 @@ func (s *AccountService) CreateUser(ctx context.Context, request *proto.CreateUs
 		return result, nil
 	}
 
-	err = channel.GetResult(response, channel.ResultCallback{
-		CorrelationID: cmd.GetCommandId(),
+	err = channel.Channels.GetResult(cmd.GetCommandId(), channel.ChannelHandler{
 		OnSuccess: func(i interface{}) {
 			data := i.(*proto.EventUserCreated)
 			result.Data = data.GetId()

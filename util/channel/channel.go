@@ -8,21 +8,29 @@ import (
 	"time"
 )
 
-var ResultMap = make(map[string]chan ResultChannel)
-var MapMutex = &sync.Mutex{}
+var (
+	Channels = Channel{
+		result: make(map[string]chan ResultChannel),
+		mutex:  &sync.Mutex{},
+	}
+)
 
 type (
+	Channel struct {
+		result map[string]chan ResultChannel
+		mutex  *sync.Mutex
+	}
+
 	ResultChannel struct {
 		CorrelationID string
 		Failed        *proto.EventError
 		Success       any
 	}
 
-	ResultCallback struct {
-		CorrelationID string
-		OnSuccess     SuccessFunc
-		OnFailed      FailedFunc
-		Logger        *zap.Logger
+	ChannelHandler struct {
+		OnSuccess SuccessFunc
+		OnFailed  FailedFunc
+		Logger    *zap.Logger
 	}
 
 	SuccessFunc func(interface{})
@@ -33,14 +41,29 @@ func (r ResultChannel) IsSuccess() bool {
 	return r.Failed == nil && r.Success != nil
 }
 
-func AddChannel(correlationID string, channel chan ResultChannel) {
-	MapMutex.Lock()
-	ResultMap[correlationID] = channel
-	MapMutex.Unlock()
+func (c Channel) AddChannel(correlationID string) {
+	c.mutex.Lock()
+	c.result[correlationID] = make(chan ResultChannel, 1)
+	c.mutex.Unlock()
 }
 
-func GetResult(channel chan ResultChannel, callback ResultCallback) error {
+func (c Channel) GetChannel(correlationID string) chan ResultChannel {
+	channel, exist := c.result[correlationID]
+	if !exist {
+		return nil
+	}
+
+	return channel
+}
+
+func (c Channel) GetResult(correlationID string, callback ChannelHandler) error {
 	var err error
+
+	channel := c.GetChannel(correlationID)
+	if channel == nil {
+		return errors.New("")
+	}
+
 	select {
 	case result := <-channel:
 		if result.IsSuccess() {
@@ -50,12 +73,9 @@ func GetResult(channel chan ResultChannel, callback ResultCallback) error {
 		}
 	case <-time.After(15 * time.Second):
 		err = errors.New("waiting time for result 15 sec")
-	}
-
-	if err != nil {
 		callback.Logger.Error(
 			"An error occurred while waiting for a response.",
-			zap.String("correlation_id", callback.CorrelationID),
+			zap.String("correlation_id", correlationID),
 			zap.Error(err),
 		)
 	}
@@ -63,28 +83,28 @@ func GetResult(channel chan ResultChannel, callback ResultCallback) error {
 	return err
 }
 
-func FinishSuccess(correlationID string, event interface{}) {
-	MapMutex.Lock()
-	if resultChan, exists := ResultMap[correlationID]; exists {
+func (c Channel) Success(correlationID string, event interface{}) {
+	c.mutex.Lock()
+	if resultChan, exists := c.result[correlationID]; exists {
 		resultChan <- ResultChannel{
 			CorrelationID: correlationID,
 			Success:       event,
 		}
 		close(resultChan)
-		delete(ResultMap, correlationID)
+		delete(c.result, correlationID)
 	}
-	MapMutex.Unlock()
+	c.mutex.Unlock()
 }
 
-func FinishFailed(correlationID string, event *proto.EventError) {
-	MapMutex.Lock()
-	if resultChan, exists := ResultMap[correlationID]; exists {
+func (c Channel) Failed(correlationID string, event *proto.EventError) {
+	c.mutex.Lock()
+	if resultChan, exists := c.result[correlationID]; exists {
 		resultChan <- ResultChannel{
 			CorrelationID: correlationID,
 			Failed:        event,
 		}
 		close(resultChan)
-		delete(ResultMap, correlationID)
+		delete(c.result, correlationID)
 	}
-	MapMutex.Unlock()
+	c.mutex.Unlock()
 }

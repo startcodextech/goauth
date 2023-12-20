@@ -51,7 +51,7 @@ func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) erro
 			Error:     err.Error(),
 		}
 
-		channel.FinishFailed(cmd.GetCommandId(), event)
+		channel.Channels.Failed(cmd.GetCommandId(), event)
 
 		err := c.eventBus.Publish(ctx, event)
 		if err != nil {
@@ -75,7 +75,7 @@ func (c CreateUserHandler) Handle(ctx context.Context, command interface{}) erro
 		Email:    cmd.GetPayload().GetEmail(),
 	}
 
-	channel.FinishSuccess(cmd.GetCommandId(), event)
+	channel.Channels.Success(cmd.GetCommandId(), event)
 
 	c.logger.Info(
 		"User created",
