@@ -9,6 +9,7 @@ import (
 	"github.com/startcodextech/goauth/internal/application/grpc"
 	"github.com/startcodextech/goauth/internal/application/http"
 	"github.com/startcodextech/goauth/internal/application/services"
+	"github.com/startcodextech/goauth/internal/infrastructure/brevo"
 	"github.com/startcodextech/goauth/internal/infrastructure/messaging/gochannel"
 	"github.com/startcodextech/goauth/internal/infrastructure/persistence/mongodb"
 	"github.com/startcodextech/goauth/util/log"
@@ -29,6 +30,8 @@ func main() {
 		}
 	}(zapLogger)
 	logger := log.NewLogger(zapLogger)
+
+	brevoApi := brevo.New(zapLogger)
 
 	mongo := mongodb.New(ctx, os.Getenv("DB_NAME"), logger)
 	defer mongo.Disconnect(ctx)()
@@ -51,7 +54,7 @@ func main() {
 	eventProcessor := cqrs.NewEventProcessor(pubSub, cqrsRouter, cqrsMarshaler, logger)
 
 	commands.RunHandlers(commandProcessor, eventBus, svcs, zapLogger)
-	events.RunHandlers(eventProcessor, eventBus, svcs, zapLogger)
+	events.RunHandlers(eventProcessor, eventBus, svcs, brevoApi, zapLogger)
 
 	httpServer := http.New(zapLogger)
 
