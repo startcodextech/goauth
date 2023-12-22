@@ -1,6 +1,11 @@
 package brevo
 
 type (
+	SendTo struct {
+		Email string `json:"email"`
+		Name  string `json:"name"`
+	}
+
 	ErrorModel struct {
 		Code    string `json:"code"`
 		Message string `json:"message"`

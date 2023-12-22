@@ -31,7 +31,7 @@ func main() {
 	}(zapLogger)
 	logger := log.NewLogger(zapLogger)
 
-	brevoApi := brevo.New(zapLogger)
+	brevoApi := brevo.New()
 
 	mongo := mongodb.New(ctx, os.Getenv("DB_NAME"), logger)
 	defer mongo.Disconnect(ctx)()

@@ -6,90 +6,73 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"go.uber.org/zap"
 	"net/http"
 	"os"
 )
 
+const (
+	baseURL      = "https://api.brevo.com/v3"
+	emailTestURL = baseURL + "/smtp/templates/%d/sendTest"
+	emailURL     = baseURL + "/smtp/email"
+	contentType  = "application/json"
+)
+
 type (
 	Brevo struct {
-		key    string
-		url    string
-		logger *zap.Logger
-	}
-
-	SendTo struct {
-		Email string
-		Name  string
+		key string
 	}
 )
 
-func New(logger *zap.Logger) Brevo {
-	return Brevo{
-		key:    os.Getenv("BREVO_API"),
-		url:    "https://api.brevo.com/v3",
-		logger: logger,
+func New() *Brevo {
+	return &Brevo{
+		key: os.Getenv("BREVO_API"),
 	}
 }
 
-func (b Brevo) SendTemplateEmail(ctx context.Context, test bool, templateID int64, emails []SendTo, params map[string]interface{}) error {
-	if test {
-		url := fmt.Sprintf("%s%s%d%s", b.url, "/smtp/templates/", templateID, "/sendTest")
-		agent := fiber.Post(url)
-		agent.ContentType("application/json")
-		agent.Add("api-key", b.key)
-		agent.JSON(fiber.Map{
-			"params": params,
-		})
-		status, body, errs := agent.Bytes()
-		if len(errs) > 0 {
-			return errs[0]
-		}
-		if status == http.StatusNoContent {
-			return nil
-		}
-		if status == http.StatusBadRequest {
-			var e PostSendFailed
-			err := json.Unmarshal(body, &e)
-			if err != nil {
-				return err
-			}
-			return errors.New(fmt.Sprintf(
-				"%s  UnexistingEmails: %v  WithoutListEmails: %v BlackListedEmails: %v",
-				e.Message,
-				e.UnexistingEmails,
-				e.WithoutListEmails,
-				e.BlackListedEmails,
-			))
-		}
-		if status == http.StatusNotFound {
-			return errors.New("template ID not found")
-		}
-		return nil
+func (b *Brevo) SendTemplateEmail(ctx context.Context, test bool, templateID int64, emails []SendTo, params map[string]interface{}) error {
+	url := fmt.Sprintf(emailTestURL, templateID)
+	if !test {
+		url = emailURL
 	}
 
-	agent := fiber.Post(fmt.Sprintf("%s%s", b.url, "/smtp/email"))
-	agent.ContentType("application/json")
-	agent.Add("api-key", b.key)
+	agent := fiber.Post(url).ContentType(contentType).Add("api-key", b.key)
+	if test {
+		agent.JSON(
+			fiber.Map{
+				"params": params,
+			},
+		)
+	} else {
+		agent.JSON(
+			fiber.Map{
+				"to":         emails,
+				"params":     params,
+				"templateId": templateID,
+			},
+		)
+	}
 
-	agent.JSON(fiber.Map{
-		"to":         emails,
-		"params":     params,
-		"templateId": templateID,
-	})
 	status, body, errs := agent.Bytes()
 	if len(errs) > 0 {
 		return errs[0]
 	}
 
-	if status == http.StatusCreated || status == http.StatusAccepted {
+	switch status {
+	case http.StatusNoContent, http.StatusCreated, http.StatusAccepted:
 		return nil
+	case http.StatusBadRequest:
+		var e PostSendFailed
+		if err := json.Unmarshal(body, &e); err != nil {
+			return err
+		}
+		return errors.New(e.Message)
+	case http.StatusNotFound:
+		return errors.New("template ID not found")
+	default:
+		var e ErrorModel
+		if err := json.Unmarshal(body, &e); err != nil {
+			return err
+		}
+		return errors.New(e.Message)
 	}
-
-	var e ErrorModel
-	err := json.Unmarshal(body, &e)
-	if err != nil {
-		return err
-	}
-	return errors.New(e.Message)
 }

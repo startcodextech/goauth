@@ -12,7 +12,7 @@ func RunHandlers(
 	processor *cqrs.EventProcessor,
 	eventBus *cqrs.EventBus,
 	services services.Services,
-	brevoApi brevo.Brevo,
+	brevoApi *brevo.Brevo,
 	logger *zap.Logger,
 ) {
 	account.SetupHandlers(processor, brevoApi, logger)

@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func SetupHandlers(processor *cqrs.EventProcessor, brevoApi brevo.Brevo, logger *zap.Logger) {
+func SetupHandlers(processor *cqrs.EventProcessor, brevoApi *brevo.Brevo, logger *zap.Logger) {
 	err := processor.AddHandlers(
 		UserCreatedOnCreateUser{
 			brevoApi: brevoApi,

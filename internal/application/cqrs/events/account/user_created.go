@@ -10,7 +10,7 @@ import (
 
 type (
 	UserCreatedOnCreateUser struct {
-		brevoApi brevo.Brevo
+		brevoApi *brevo.Brevo
 		logger   *zap.Logger
 	}
 
@@ -34,7 +34,7 @@ func (e UserCreatedOnCreateUser) Handle(ctx context.Context, event interface{}) 
 
 	params := map[string]interface{}{
 		"name": eventMsg.Name,
-		"url":  "https://startcodex.com/user/verify?token=sdkljfh8eir32werwnkwjchrewihcrwejndkweuhywieucfw",
+		"url":  eventMsg.GetUrlToken(),
 	}
 
 	sendTo := []brevo.SendTo{
@@ -46,7 +46,7 @@ func (e UserCreatedOnCreateUser) Handle(ctx context.Context, event interface{}) 
 
 	err := e.brevoApi.SendTemplateEmail(ctx, true, 1, sendTo, params)
 	if err != nil {
-		return err
+		e.logger.Error("Failed send email", zap.Error(err))
 	}
 
 	return nil

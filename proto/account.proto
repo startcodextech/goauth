@@ -46,4 +46,5 @@ message EventUserCreated {
   string name = 3;
   string last_name = 4;
   string command_id = 5;
+  string url_token = 6;
 }
